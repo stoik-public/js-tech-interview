@@ -2,6 +2,7 @@ import type {
   Contract,
   ContractDetail,
   ContractListItem,
+  HiringTest,
   PricingCatalog,
   ProspectDetail,
   ProspectListItem,
@@ -42,15 +43,20 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
 }
 
 export const api = {
+  tests: () => request<HiringTest[]>('GET', '/dev/tests'),
   pricingCatalog: () => request<PricingCatalog>('GET', '/pricing/catalog'),
-  prospects: () => request<ProspectListItem[]>('GET', '/prospects'),
-  prospect: (companyId: string) => request<ProspectDetail>('GET', `/prospects/${companyId}`),
-  deleteProspect: (companyId: string) => request<void>('DELETE', `/prospects/${companyId}`),
+  prospects: () => request<ProspectListItem[]>('GET', '/distribution/prospects'),
+  prospect: (companyId: string) =>
+    request<ProspectDetail>('GET', `/distribution/prospects/${companyId}`),
+  deleteProspect: (companyId: string) =>
+    request<void>('DELETE', `/distribution/prospects/${companyId}`),
   createProspect: (input: { name: string; annualRevenueCents: number }) =>
-    request<{ id: string }>('POST', '/prospects', input),
+    request<{ id: string }>('POST', '/distribution/prospects', input),
   updateQuote: (quoteId: string, configuration: QuoteConfiguration) =>
-    request<Quote>('PUT', `/quotes/${quoteId}`, configuration),
-  validateQuote: (quoteId: string) => request<Contract>('POST', `/quotes/${quoteId}/validate`),
-  contracts: () => request<ContractListItem[]>('GET', '/contracts'),
-  contract: (contractId: string) => request<ContractDetail>('GET', `/contracts/${contractId}`),
+    request<Quote>('PUT', `/distribution/quotes/${quoteId}`, configuration),
+  validateQuote: (quoteId: string) =>
+    request<Contract>('POST', `/distribution/quotes/${quoteId}/validate`),
+  contracts: () => request<ContractListItem[]>('GET', '/distribution/contracts'),
+  contract: (contractId: string) =>
+    request<ContractDetail>('GET', `/distribution/contracts/${contractId}`),
 };

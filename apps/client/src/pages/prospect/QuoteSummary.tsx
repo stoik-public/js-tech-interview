@@ -78,7 +78,7 @@ function Validation({ quote, blockedReason }: { quote: Quote; blockedReason: str
       onConfirm={() => validate.mutateAsync(quote.id)}
       onSuccess={(contract) => {
         toast('Quote signed');
-        navigate(`/contracts/${contract.id}`, { replace: true });
+        navigate(`/insurance/contracts/${contract.id}`, { replace: true });
       }}
     >
       <p className="text-gray-7 mt-2">

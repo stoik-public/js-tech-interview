@@ -1,9 +1,9 @@
 import { Contract } from 'src/distribution/domain/contract/contract';
 import type { ContractView } from 'src/distribution/domain/ports/distribution-queries.port';
-import type { Contract as ContractRow } from 'src/generated/prisma/client';
+import type { ContractRow } from 'src/distribution/infra/db/schema';
 
 export class ContractMapper {
-  static fromPrismaToDomain(row: ContractRow): Contract {
+  static fromRowToDomain(row: ContractRow): Contract {
     const {
       id,
       coverageLimitCents,
@@ -19,7 +19,7 @@ export class ContractMapper {
     );
   }
 
-  static fromDomainToPrisma(contract: Contract) {
+  static fromDomainToRow(contract: Contract) {
     const { terms, ...props } = contract.getProps();
     return { id: contract.id, ...props, ...terms };
   }

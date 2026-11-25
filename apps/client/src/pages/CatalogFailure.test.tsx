@@ -26,14 +26,14 @@ describe('when the pricing catalog cannot be loaded', () => {
   it('the contract page still shows the contract, and says so', async () => {
     fakeApi({
       'GET /pricing/catalog': () => failure(503, 'The pricing catalog is unavailable'),
-      'GET /contracts/contract-1': () => ok({ ...contract(), company: company() }),
+      'GET /distribution/contracts/contract-1': () => ok({ ...contract(), company: company() }),
     });
 
     render(
       <Routes>
-        <Route path="/contracts/:contractId" element={<ContractPage />} />
+        <Route path="/insurance/contracts/:contractId" element={<ContractPage />} />
       </Routes>,
-      { wrapper: pageWrapper(createQueryClient(), '/contracts/contract-1') },
+      { wrapper: pageWrapper(createQueryClient(), '/insurance/contracts/contract-1') },
     );
 
     expect(await screen.findByRole('heading', { name: 'Acme' })).toBeDefined();

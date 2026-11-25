@@ -26,7 +26,7 @@ export function ProspectActions({ company }: { company: Company }) {
       onConfirm={() => remove.mutateAsync(company.id)}
       onSuccess={() => {
         toast('Prospect deleted');
-        navigate('/prospects', { replace: true });
+        navigate('/insurance/prospects', { replace: true });
       }}
     >
       <p className="text-gray-7 mt-2">

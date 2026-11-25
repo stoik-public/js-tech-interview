@@ -2,17 +2,17 @@ services:
   postgres:
     image: postgres:17-alpine
     environment:
-      POSTGRES_USER: stoik
-      POSTGRES_PASSWORD: stoik
+      # The root .env, written by scripts/setup-env.mjs from apps/api/.env.
+      POSTGRES_USER: ${POSTGRES_USER:?run pnpm install first}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?run pnpm install first}
       POSTGRES_DB: stoik_lite
     ports:
-      # POSTGRES_PORT comes from the root .env, written by scripts/setup-env.mjs.
       - '${POSTGRES_PORT:-5433}:5432'
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - ./docker/postgres-init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U stoik -d stoik_lite']
+      test: ['CMD-SHELL', 'pg_isready -U "$$POSTGRES_USER" -d stoik_lite']
       interval: 2s
       timeout: 3s
       retries: 20

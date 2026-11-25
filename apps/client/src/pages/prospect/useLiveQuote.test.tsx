@@ -9,7 +9,7 @@ import { company, draftQuote, prospectDetail } from '../../test/fixtures';
 import { createQueryClient, queryWrapper } from '../../test/providers';
 import { useLiveQuote } from './useLiveQuote';
 
-const PUT = 'PUT /quotes/quote-1';
+const PUT = 'PUT /distribution/quotes/quote-1';
 const savedConfiguration = {
   annualRevenueCents: 100_000_000,
   coverageLimitCents: 50_000_000,

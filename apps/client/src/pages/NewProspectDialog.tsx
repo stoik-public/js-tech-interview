@@ -84,7 +84,7 @@ export function NewProspectDialog({ open, onClose }: { open: boolean; onClose: (
         onSuccess: ({ id }) => {
           toast('Prospect created');
           close();
-          navigate(`/prospects/${id}`);
+          navigate(`/insurance/prospects/${id}`);
         },
         onError: (error) => focusField(errorsFromApi(error)),
       },

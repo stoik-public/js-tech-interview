@@ -17,11 +17,11 @@ function renderProspectPage() {
   const queryClient = createQueryClient();
   render(
     <Routes>
-      <Route path="/prospects" element={<p>Prospects page</p>} />
-      <Route path="/prospects/:companyId" element={<ProspectPage />} />
-      <Route path="/contracts/:contractId" element={<ContractMarker />} />
+      <Route path="/insurance/prospects" element={<p>Prospects page</p>} />
+      <Route path="/insurance/prospects/:companyId" element={<ProspectPage />} />
+      <Route path="/insurance/contracts/:contractId" element={<ContractMarker />} />
     </Routes>,
-    { wrapper: pageWrapper(queryClient, '/prospects/company-1') },
+    { wrapper: pageWrapper(queryClient, '/insurance/prospects/company-1') },
   );
   return { queryClient, user: userEvent.setup() };
 }
@@ -33,7 +33,7 @@ describe('a quote with its contract', () => {
   it('is shown on the contract page', async () => {
     fakeApi({
       'GET /pricing/catalog': () => ok(catalog()),
-      'GET /prospects/company-1': () =>
+      'GET /distribution/prospects/company-1': () =>
         ok(prospectDetail({ quote: draftQuote({ status: 'signed', contract: contract() }) })),
     });
 
@@ -47,7 +47,7 @@ describe('a draft quote', () => {
   it('shows the quote and its premium', async () => {
     fakeApi({
       'GET /pricing/catalog': () => ok(catalog()),
-      'GET /prospects/company-1': () => ok(prospectDetail()),
+      'GET /distribution/prospects/company-1': () => ok(prospectDetail()),
     });
 
     renderProspectPage();
@@ -60,7 +60,7 @@ describe('a draft quote', () => {
   it('says why the catalog is missing, next to the prospect', async () => {
     fakeApi({
       'GET /pricing/catalog': () => failure(400, 'No catalog'),
-      'GET /prospects/company-1': () => ok(prospectDetail()),
+      'GET /distribution/prospects/company-1': () => ok(prospectDetail()),
     });
 
     renderProspectPage();
@@ -71,15 +71,15 @@ describe('a draft quote', () => {
   it('is validated after confirmation, which opens the contract and forgets the prospect', async () => {
     const api = fakeApi({
       'GET /pricing/catalog': () => ok(catalog()),
-      'GET /prospects/company-1': () => ok(prospectDetail()),
-      'POST /quotes/quote-1/validate': () => ok(contract()),
+      'GET /distribution/prospects/company-1': () => ok(prospectDetail()),
+      'POST /distribution/quotes/quote-1/validate': () => ok(contract()),
     });
     const { queryClient, user } = renderProspectPage();
     await screen.findByText('Draft');
 
     await user.click(validateButton());
     const dialog = screen.getByRole('dialog', { name: 'Validate this quote?' });
-    expect(api.callsTo('POST /quotes/quote-1/validate')).toHaveLength(0);
+    expect(api.callsTo('POST /distribution/quotes/quote-1/validate')).toHaveLength(0);
     await user.click(within(dialog).getByRole('button', { name: 'Validate quote' }));
 
     expect(await screen.findByText('Contract page contract-1')).toBeDefined();
@@ -92,8 +92,8 @@ describe('a draft quote', () => {
     const saving = new Promise<Reply>((done) => (release = done));
     fakeApi({
       'GET /pricing/catalog': () => ok(catalog()),
-      'GET /prospects/company-1': () => ok(prospectDetail()),
-      'PUT /quotes/quote-1': () => saving,
+      'GET /distribution/prospects/company-1': () => ok(prospectDetail()),
+      'PUT /distribution/quotes/quote-1': () => saving,
     });
     const { user } = renderProspectPage();
     await screen.findByText('Draft');
@@ -112,8 +112,8 @@ describe('a draft quote', () => {
   it('is deleted after confirmation, which goes back to the prospects', async () => {
     const api = fakeApi({
       'GET /pricing/catalog': () => ok(catalog()),
-      'GET /prospects/company-1': () => ok(prospectDetail()),
-      'DELETE /prospects/company-1': () => noContent(),
+      'GET /distribution/prospects/company-1': () => ok(prospectDetail()),
+      'DELETE /distribution/prospects/company-1': () => noContent(),
     });
     const { user } = renderProspectPage();
     await screen.findByText('Draft');
@@ -125,6 +125,6 @@ describe('a draft quote', () => {
 
     expect(await screen.findByText('Prospects page')).toBeDefined();
     expect(await screen.findByText('Prospect deleted')).toBeDefined();
-    expect(api.callsTo('DELETE /prospects/company-1')).toHaveLength(1);
+    expect(api.callsTo('DELETE /distribution/prospects/company-1')).toHaveLength(1);
   });
 });

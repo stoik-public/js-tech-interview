@@ -1,7 +1,9 @@
-import { Controller, Get, RequestMethod } from '@nestjs/common';
+import { Controller, Get, NotFoundException, Query, RequestMethod } from '@nestjs/common';
 import { METHOD_METADATA, PATH_METADATA, ROUTE_ARGS_METADATA } from '@nestjs/common/constants';
 import { DiscoveryService, MetadataScanner } from '@nestjs/core';
 import { z } from 'zod';
+
+import { TESTS } from 'src/core/infra/dev/tests';
 
 export type RouteInfo = {
   method: string;
@@ -19,7 +21,10 @@ const join = (...parts: string[]) =>
     .filter(Boolean)
     .join('/')}`;
 
-/** Every HTTP route of the API, read from Nest's own metadata, for the toolbox's API explorer. */
+/**
+ * Every HTTP route of the API, read from Nest's own metadata, for the toolbox's API explorer.
+ * With `?test=`, only the routes of that test's bounded contexts.
+ */
 @Controller('dev/routes')
 export class DevRoutesController {
   constructor(
@@ -28,12 +33,18 @@ export class DevRoutesController {
   ) {}
 
   @Get()
-  list(): RouteInfo[] {
+  list(@Query('test') testId?: string): RouteInfo[] {
+    const test = testId === undefined ? undefined : TESTS.find(({ id }) => id === testId);
+    if (testId !== undefined && !test) throw new NotFoundException(`Unknown test: ${testId}`);
+    const contexts = test?.contexts;
+
     const routes = this.discovery.getControllers().flatMap(({ instance, metatype, host }) => {
-      if (!instance || !metatype || metatype === DevRoutesController) return [];
+      if (!instance || !metatype) return [];
+      const context = (host?.metatype?.name ?? '').replace(/Module$/, '').toLowerCase();
+      // The developer routes are tooling, not part of the API a candidate works on.
+      if (context === 'dev' || (contexts && !contexts.includes(context))) return [];
       const prototype = Object.getPrototypeOf(instance);
       const base = [Reflect.getMetadata(PATH_METADATA, metatype) ?? ''].flat()[0];
-      const context = (host?.metatype?.name ?? '').replace(/Module$/, '').toLowerCase();
 
       return this.scanner.getAllMethodNames(prototype).flatMap((name) => {
         const handler = prototype[name];

@@ -5,7 +5,7 @@ import {
   DeleteProspectUseCase,
 } from 'src/distribution/use-cases/delete-prospect/use-case';
 
-@Controller('prospects')
+@Controller('distribution/prospects')
 export class HttpDeleteProspectController {
   constructor(private readonly useCase: DeleteProspectUseCase) {}
 

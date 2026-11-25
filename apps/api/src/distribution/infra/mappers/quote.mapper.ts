@@ -1,9 +1,9 @@
 import type { QuoteView } from 'src/distribution/domain/ports/distribution-queries.port';
 import { Quote } from 'src/distribution/domain/quote/quote';
-import type { Prisma, Quote as QuoteRow } from 'src/generated/prisma/client';
+import type { QuoteRow } from 'src/distribution/infra/db/schema';
 
 export class QuoteMapper {
-  static fromPrismaToDomain(row: QuoteRow): Quote {
+  static fromRowToDomain(row: QuoteRow): Quote {
     return Quote.hydrate(
       {
         companyId: row.companyId,
@@ -15,7 +15,7 @@ export class QuoteMapper {
         },
         pricing: {
           premiumCents: row.premiumCents,
-          breakdown: row.pricingBreakdown as Record<string, unknown>,
+          breakdown: row.pricingBreakdown,
         },
         createdAt: row.createdAt,
         updatedAt: row.updatedAt,
@@ -24,14 +24,14 @@ export class QuoteMapper {
     );
   }
 
-  static fromDomainToPrisma(quote: Quote) {
+  static fromDomainToRow(quote: Quote) {
     const { terms, pricing, ...props } = quote.getProps();
     return {
       id: quote.id,
       ...props,
       ...terms,
       premiumCents: pricing.premiumCents,
-      pricingBreakdown: pricing.breakdown as Prisma.InputJsonObject,
+      pricingBreakdown: pricing.breakdown,
     };
   }
 

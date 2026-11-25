@@ -1,6 +1,9 @@
 import { defineConfig, type OxlintOverride } from 'oxlint';
 
 const BOUNDED_CONTEXTS = ['pricing', 'distribution'] as const;
+
+/** The database libraries: adapters use them, the model and the use cases never do. */
+const DATABASE = ['drizzle-orm', 'drizzle-orm/*', 'drizzle-kit', 'pg'];
 type BoundedContext = (typeof BOUNDED_CONTEXTS)[number];
 
 const restrictImports = (...patterns: { group: string[]; message: string }[]) => ({
@@ -35,9 +38,7 @@ const boundedContextOverrides = (context: BoundedContext): OxlintOverride[] => {
       rules: restrictImports({
         group: [
           '@nestjs/*',
-          '@prisma/*',
-          'src/common/**',
-          'src/generated/**',
+          ...DATABASE,
           'src/core/infra/**',
           `src/${context}/infra/**`,
           `src/${context}/use-cases/**`,
@@ -49,8 +50,8 @@ const boundedContextOverrides = (context: BoundedContext): OxlintOverride[] => {
     {
       files: [useCase],
       rules: restrictImports(noPeers, {
-        group: ['src/common/**', 'src/generated/**', '@prisma/*', `src/${context}/infra/**`],
-        message: `A use case depends on ports from ${context}/domain/ports/, never on an adapter or on Prisma. ${context}.module.ts binds the adapters.`,
+        group: ['src/core/infra/**', ...DATABASE, `src/${context}/infra/**`],
+        message: `A use case depends on ports from ${context}/domain/ports/, never on an adapter or on the database. ${context}.module.ts binds the adapters.`,
       }),
     },
     {
@@ -78,7 +79,7 @@ const boundedContextOverrides = (context: BoundedContext): OxlintOverride[] => {
 export default defineConfig({
   plugins: ['typescript', 'import', 'react'],
   env: { node: true, browser: true },
-  ignorePatterns: ['**/dist', '**/coverage', '**/generated'],
+  ignorePatterns: ['**/dist', '**/coverage'],
   rules: {
     'no-console': ['error', { allow: ['warn', 'error', 'info'] }],
     'object-shorthand': ['error', 'properties'],
@@ -98,9 +99,7 @@ export default defineConfig({
       rules: restrictImports({
         group: [
           '@nestjs/*',
-          '@prisma/*',
-          'src/common/**',
-          'src/generated/**',
+          ...DATABASE,
           'src/core/infra/**',
           ...BOUNDED_CONTEXTS.map((context) => `src/${context}/**`),
         ],
@@ -110,7 +109,7 @@ export default defineConfig({
     ...BOUNDED_CONTEXTS.flatMap(boundedContextOverrides),
     {
       // Scripts print to the terminal.
-      files: ['apps/api/prisma/**', 'apps/client/scripts/**', 'scripts/**'],
+      files: ['apps/api/seed/**', 'apps/api/scripts/**', 'apps/client/scripts/**', 'scripts/**'],
       rules: { 'no-console': 'off' },
     },
   ],

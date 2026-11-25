@@ -23,7 +23,7 @@ export function ContractPage() {
       <PageHeader
         icon={IconBriefcase}
         breadcrumbs={[
-          { label: 'Contracts', to: '/contracts' },
+          { label: 'Contracts', to: '/insurance/contracts' },
           { label: contract.data?.company.name ?? 'Contract' },
         ]}
       />

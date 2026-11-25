@@ -3,7 +3,7 @@ import type { NestExpressApplication } from '@nestjs/platform-express';
 
 import { AppModule } from 'src/app.module';
 import { configureApp } from 'src/app.setup';
-import { config } from 'src/common/config';
+import { config } from 'src/core/infra/config';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);

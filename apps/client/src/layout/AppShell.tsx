@@ -1,9 +1,30 @@
 import { IconAddressBook, IconBriefcase, IconShieldLock, type Icon } from '@tabler/icons-react';
 import type { ReactNode } from 'react';
-import { NavLink, Outlet } from 'react-router';
+import { NavLink, Outlet, useNavigate } from 'react-router';
+
+import { useTests } from '../lib/server-state';
+import { Select } from '../ui/Select';
+import { useCurrentTest } from './current-test';
+
+/** The sidebar of each hiring test. */
+const navigation: Record<string, () => ReactNode> = {
+  insurance: () => (
+    <>
+      <SidebarItem to="/insurance/prospects" icon={IconAddressBook}>
+        Prospects
+      </SidebarItem>
+      <p className="text-gray hidden px-3 py-2 text-xs font-medium sm:block">Portfolio</p>
+      <SidebarItem to="/insurance/contracts" icon={IconBriefcase}>
+        Contracts
+      </SidebarItem>
+    </>
+  ),
+};
 
 /** Shell of every page: navigation, then the page in a white panel. */
 export function AppShell() {
+  const test = useCurrentTest();
+  const Navigation = test ? navigation[test] : undefined;
   return (
     <div className="bg-gray-0 min-h-screen sm:flex sm:h-screen">
       <a
@@ -20,14 +41,9 @@ export function AppShell() {
         <div className="flex shrink-0 items-center px-2 sm:my-2 sm:h-14 sm:px-4">
           <SpaceLogo />
         </div>
+        <TestSwitcher current={test} />
         <div className="flex min-w-0 grow items-center gap-1 overflow-x-auto sm:block sm:space-y-1 sm:overflow-y-auto sm:px-2 sm:pb-2">
-          <SidebarItem to="/prospects" icon={IconAddressBook}>
-            Prospects
-          </SidebarItem>
-          <p className="text-gray hidden px-3 py-2 text-xs font-medium sm:block">Portfolio</p>
-          <SidebarItem to="/contracts" icon={IconBriefcase}>
-            Contracts
-          </SidebarItem>
+          {Navigation && <Navigation />}
         </div>
       </nav>
       <div className="flex min-w-0 flex-1 flex-col sm:overflow-hidden sm:p-2">
@@ -39,6 +55,23 @@ export function AppShell() {
           <Outlet />
         </main>
       </div>
+    </div>
+  );
+}
+
+/** Switches between the hiring tests: each one has its own pages, tables and routes. */
+function TestSwitcher({ current }: { current: string | null }) {
+  const tests = useTests();
+  const navigate = useNavigate();
+  if (!tests.data) return null;
+  return (
+    <div className="hidden px-4 pb-3 sm:block">
+      <Select
+        label="Test"
+        options={tests.data.map((test) => ({ value: test.id, label: test.name }))}
+        value={current}
+        onChange={(id) => navigate(`/${id}`)}
+      />
     </div>
   );
 }

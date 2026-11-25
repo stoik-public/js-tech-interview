@@ -12,6 +12,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState, type ReactNode } from 'react';
 import { useLocation } from 'react-router';
 
+import { useCurrentTest } from '../layout/current-test';
 import { readCachedContract, readCachedProspect } from '../lib/server-state';
 import { Alert } from '../ui/Alert';
 import { IconButton } from '../ui/IconButton';
@@ -34,7 +35,7 @@ type JsonSchema = {
   format?: string;
 };
 
-/** Shape returned by GET /api/dev/routes (apps/api/src/common/dev/routes.controller.ts). */
+/** Shape returned by GET /api/dev/routes (apps/api/src/core/infra/dev/routes.controller.ts). */
 type Route = {
   method: string;
   path: string;
@@ -90,15 +91,16 @@ const routeTitle = (route: Route) =>
     .replace(/(?<=[a-z])(?=[A-Z])/g, ' ')
     .replace(/(?<= )[A-Z]/g, (letter) => letter.toLowerCase());
 
-async function fetchRoutes(): Promise<Route[]> {
-  const response = await fetch('/api/dev/routes');
+async function fetchRoutes(test: string | null): Promise<Route[]> {
+  const response = await fetch(test ? `/api/dev/routes?test=${test}` : '/api/dev/routes');
   if (!response.ok) throw new Error(`Could not list the routes (${response.status}).`);
   return response.json();
 }
 
-/** Every API route, and a form to call it. */
+/** Every API route of the open test, and a form to call it. */
 export function ApiExplorerPanel() {
-  const routes = useQuery({ queryKey: ['dev-routes'], queryFn: fetchRoutes });
+  const test = useCurrentTest();
+  const routes = useQuery({ queryKey: ['dev-routes', test], queryFn: () => fetchRoutes(test) });
   const [search, setSearch] = useState('');
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   // The last response of each route, kept while the panel is open.
@@ -231,7 +233,7 @@ function MethodLabel({ method, className = '' }: { method: string; className?: s
 function usePageValues(): Record<string, unknown> {
   const queryClient = useQueryClient();
   const [, section, id] =
-    /^\/(prospects|contracts)\/([0-9a-f-]{36})/.exec(useLocation().pathname) ?? [];
+    /^\/insurance\/(prospects|contracts)\/([0-9a-f-]{36})/.exec(useLocation().pathname) ?? [];
   const detail = section === 'prospects' ? readCachedProspect(queryClient, id) : undefined;
   const contract = section === 'contracts' ? readCachedContract(queryClient, id) : undefined;
   return {

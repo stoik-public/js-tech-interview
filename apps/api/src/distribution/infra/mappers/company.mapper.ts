@@ -1,32 +1,24 @@
 import { Company } from 'src/distribution/domain/company/company';
 import type { CompanyView } from 'src/distribution/domain/ports/distribution-queries.port';
-import type { Company as CompanyRow } from 'src/generated/prisma/client';
-
-// Up to 50M EUR, far below Number.MAX_SAFE_INTEGER cents.
-const toCents = (annualRevenueCents: bigint): number => Number(annualRevenueCents);
+import type { CompanyRow } from 'src/distribution/infra/db/schema';
 
 export class CompanyMapper {
-  static fromPrismaToDomain(row: CompanyRow): Company {
+  static fromRowToDomain(row: CompanyRow): Company {
     return Company.hydrate(
-      {
-        name: row.name,
-        annualRevenueCents: toCents(row.annualRevenueCents),
-        createdAt: row.createdAt,
-      },
+      { name: row.name, annualRevenueCents: row.annualRevenueCents, createdAt: row.createdAt },
       row.id,
     );
   }
 
-  static fromDomainToPrisma(company: Company) {
-    const { annualRevenueCents, ...props } = company.getProps();
-    return { id: company.id, ...props, annualRevenueCents: BigInt(annualRevenueCents) };
+  static fromDomainToRow(company: Company) {
+    return { id: company.id, ...company.getProps() };
   }
 
-  static fromPrismaToDto(row: CompanyRow): CompanyView {
+  static fromRowToDto(row: CompanyRow): CompanyView {
     return {
       id: row.id,
       name: row.name,
-      annualRevenueCents: toCents(row.annualRevenueCents),
+      annualRevenueCents: row.annualRevenueCents,
       createdAt: row.createdAt,
     };
   }

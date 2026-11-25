@@ -19,5 +19,5 @@
       "src/*": ["./src/*"]
     }
   },
-  "include": ["src", "test", "prisma"]
+  "include": ["src", "test", "seed", "scripts", "drizzle.config.ts"]
 }

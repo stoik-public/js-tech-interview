@@ -1,0 +1,329 @@
+{
+  "id": "6c930af2-692c-4d7b-aa91-12ae46c0c76a",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "distribution.company": {
+      "name": "company",
+      "schema": "distribution",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "annualRevenueCents": {
+          "name": "annualRevenueCents",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "distribution.contract": {
+      "name": "contract",
+      "schema": "distribution",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "quoteId": {
+          "name": "quoteId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "companyId": {
+          "name": "companyId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "startDate": {
+          "name": "startDate",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "endDate": {
+          "name": "endDate",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "premiumCents": {
+          "name": "premiumCents",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "coverageLimitCents": {
+          "name": "coverageLimitCents",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "deductibleCents": {
+          "name": "deductibleCents",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "options": {
+          "name": "options",
+          "type": "CoverageOption[]",
+          "typeSchema": "distribution",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "contract_companyId_idx": {
+          "name": "contract_companyId_idx",
+          "columns": [
+            {
+              "expression": "companyId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "contract_quoteId_quote_id_fk": {
+          "name": "contract_quoteId_quote_id_fk",
+          "tableFrom": "contract",
+          "tableTo": "quote",
+          "schemaTo": "distribution",
+          "columnsFrom": [
+            "quoteId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "cascade"
+        },
+        "contract_companyId_company_id_fk": {
+          "name": "contract_companyId_company_id_fk",
+          "tableFrom": "contract",
+          "tableTo": "company",
+          "schemaTo": "distribution",
+          "columnsFrom": [
+            "companyId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "contract_quoteId_key": {
+          "name": "contract_quoteId_key",
+          "nullsNotDistinct": false,
+          "columns": [
+            "quoteId"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "distribution.quote": {
+      "name": "quote",
+      "schema": "distribution",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "companyId": {
+          "name": "companyId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "QuoteStatus",
+          "typeSchema": "distribution",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'draft'"
+        },
+        "coverageLimitCents": {
+          "name": "coverageLimitCents",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "deductibleCents": {
+          "name": "deductibleCents",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "options": {
+          "name": "options",
+          "type": "CoverageOption[]",
+          "typeSchema": "distribution",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "premiumCents": {
+          "name": "premiumCents",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "pricingBreakdown": {
+          "name": "pricingBreakdown",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "quote_companyId_idx": {
+          "name": "quote_companyId_idx",
+          "columns": [
+            {
+              "expression": "companyId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "quote_companyId_company_id_fk": {
+          "name": "quote_companyId_company_id_fk",
+          "tableFrom": "quote",
+          "tableTo": "company",
+          "schemaTo": "distribution",
+          "columnsFrom": [
+            "companyId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {
+    "distribution.CoverageOption": {
+      "name": "CoverageOption",
+      "schema": "distribution",
+      "values": [
+        "ransomware_extortion",
+        "social_engineering_fraud",
+        "business_interruption",
+        "regulatory_fines"
+      ]
+    },
+    "distribution.QuoteStatus": {
+      "name": "QuoteStatus",
+      "schema": "distribution",
+      "values": [
+        "draft",
+        "signed"
+      ]
+    }
+  },
+  "schemas": {
+    "distribution": "distribution"
+  },
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

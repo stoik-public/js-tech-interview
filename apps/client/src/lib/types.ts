@@ -85,3 +85,6 @@ export type PricingCatalog = {
   deductiblesCents: number[];
   options: CoverageOption[];
 };
+
+/** A hiring test this app hosts, and the bounded contexts of the API it is about. */
+export type HiringTest = { id: string; name: string; contexts: string[] };

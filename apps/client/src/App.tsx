@@ -12,11 +12,15 @@ export function App() {
     <BrowserRouter>
       <Routes>
         <Route element={<AppShell />}>
-          <Route index element={<Navigate to="/prospects" replace />} />
-          <Route path="/prospects" element={<ProspectsPage />} />
-          <Route path="/prospects/:companyId" element={<ProspectPage />} />
-          <Route path="/contracts" element={<ContractsPage />} />
-          <Route path="/contracts/:contractId" element={<ContractPage />} />
+          <Route index element={<Navigate to="/insurance" replace />} />
+          {/* Each hiring test has its pages under its own prefix. */}
+          <Route path="insurance">
+            <Route index element={<Navigate to="prospects" replace />} />
+            <Route path="prospects" element={<ProspectsPage />} />
+            <Route path="prospects/:companyId" element={<ProspectPage />} />
+            <Route path="contracts" element={<ContractsPage />} />
+            <Route path="contracts/:contractId" element={<ContractPage />} />
+          </Route>
         </Route>
       </Routes>
       <Toolbox />

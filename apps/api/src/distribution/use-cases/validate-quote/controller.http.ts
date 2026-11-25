@@ -6,7 +6,7 @@ import {
   ValidateQuoteUseCase,
 } from 'src/distribution/use-cases/validate-quote/use-case';
 
-@Controller('quotes')
+@Controller('distribution/quotes')
 export class HttpValidateQuoteController {
   constructor(private readonly useCase: ValidateQuoteUseCase) {}
 

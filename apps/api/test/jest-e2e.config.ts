@@ -10,6 +10,7 @@ const config: Config = {
   testEnvironment: 'node',
   globalSetup: '<rootDir>/test/global-setup.ts',
   setupFiles: ['<rootDir>/test/setup-env.ts'],
+  setupFilesAfterEnv: ['<rootDir>/test/empty-tables.ts'],
 };
 
 export default config;

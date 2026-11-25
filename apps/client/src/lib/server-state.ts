@@ -16,6 +16,7 @@ export const queryKeys = {
   contracts: ['contracts'] as const,
   contract: (contractId: string) => ['contract', contractId] as const,
   pricingCatalog: ['pricing-catalog'] as const,
+  tests: ['tests'] as const,
 };
 
 export const useProspects = () =>
@@ -40,6 +41,10 @@ export const usePricingCatalog = () =>
     queryFn: api.pricingCatalog,
     staleTime: Infinity,
   });
+
+/** The hiring tests this app hosts. They only change with a release of the API. */
+export const useTests = () =>
+  useQuery({ queryKey: queryKeys.tests, queryFn: api.tests, staleTime: Infinity });
 
 export function useCreateProspect() {
   const queryClient = useQueryClient();

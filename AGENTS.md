@@ -1,19 +1,19 @@
 # Stoïk Lite
 
-Brokers create prospects, configure cyber insurance quotes and validate them, which signs them and creates contracts. There is no login: anyone can edit any quote. Domain language: [GLOSSARY.md](GLOSSARY.md).
+Brokers create prospects, configure cyber insurance quotes and validate them, which signs them and creates contracts. There is no login: anyone can edit any quote. Domain language: [apps/api/src/distribution/GLOSSARY.md](apps/api/src/distribution/GLOSSARY.md).
 
 ## Layout
 
 ```
 apps/api        NestJS API: bounded contexts, see apps/api/AGENTS.md
-apps/client     React + Vite UI (port 3000), proxies /api to the API
+apps/client     React + Vite UI (port 3000), proxies /api to the API. Pages live under /insurance
 ```
 
 ## Stack
 
 | Concern       | Choice                                                              |
 | ------------- | ------------------------------------------------------------------- |
-| API           | NestJS 12, Prisma 7 (PostgreSQL 17), zod                            |
+| API           | NestJS 12, Drizzle (PostgreSQL 17), zod                             |
 | Client        | React 19, Vite 8, Tailwind 4, Base UI, TanStack Query, React Router |
 | Tests         | Jest (API unit and e2e with Supertest), Vitest (client)             |
 | Lint / format | oxlint (`oxlint.config.mts`), oxfmt (`.oxfmtrc.jsonc`)              |
@@ -22,6 +22,7 @@ apps/client     React + Vite UI (port 3000), proxies /api to the API
 
 ```bash
 pnpm dev            # Postgres + migrations + seed (if empty) + api and client
+pnpm db:migrate     # apply every bounded context's pending migrations
 pnpm db:reset       # drop, migrate and seed again
 pnpm test           # API and client unit tests
 pnpm test:e2e       # API e2e tests, on the stoik_lite_test database
@@ -30,7 +31,7 @@ pnpm lint
 pnpm format
 ```
 
-New migration: `pnpm --filter @stoik-lite/api db:migrate --name <name>`.
+New migration: change `apps/api/src/<context>/infra/db/schema.ts`, then `pnpm db:generate <context> --name <name>`.
 
 ## Rules that apply everywhere
 
@@ -61,7 +62,8 @@ pnpm typecheck && pnpm lint && pnpm format:check && pnpm test && pnpm test:e2e
 | Priced terms of a quote                             | `apps/api/src/distribution/domain/quote/quote-terms.ts` |
 | Pricing rules in force                              | `apps/api/src/pricing/domain/pricing.ts`                |
 | Rules every adapter of a port must keep             | `apps/api/src/distribution/tests/contracts/`            |
+| Tables of a bounded context                         | `apps/api/src/<context>/infra/db/schema.ts`             |
 | Design tokens and components                        | `apps/client/src/index.css`, `apps/client/src/ui/`      |
 | Toolbox (notes, diagrams, data model, API explorer) | `apps/client/src/toolbox/`                              |
-| API routes for the toolbox                          | `apps/api/src/common/dev/routes.controller.ts`          |
-| Seed                                                | `apps/api/prisma/seed.ts`                               |
+| Tests, their bounded contexts and the dev routes    | `apps/api/src/core/infra/dev/`                          |
+| Seed                                                | `apps/api/seed/`                                        |

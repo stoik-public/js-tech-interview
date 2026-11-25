@@ -1,19 +1,14 @@
-// Demo data. Every date is relative to today so the data stays meaningful.
-//
-//   pnpm db:reset           drop, migrate and seed
-//   tsx prisma/seed.ts --if-empty   seed only when the database has no company
-import { PrismaPg } from '@prisma/adapter-pg';
+// Demo data of the insurance test: prospects with a draft quote, and clients with a contract.
+import { count } from 'drizzle-orm';
+import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 
-import { config } from 'src/common/config';
+import type { CoverageOption } from 'src/core/domain/coverage-option';
 import { startOfDayUtc } from 'src/core/domain/dates';
 import { Contract } from 'src/distribution/domain/contract/contract';
-import { PrismaClient } from 'src/generated/prisma/client';
-import type { CoverageOption } from 'src/generated/prisma/enums';
+import { company, contract, quote } from 'src/distribution/infra/db/schema';
 import { priceQuote } from 'src/pricing/public-api';
 
-const prisma = new PrismaClient({
-  adapter: new PrismaPg({ connectionString: config.DATABASE_URL }),
-});
+type Db = NodePgDatabase;
 
 const today = startOfDayUtc(new Date());
 const daysFromToday = (days: number) => new Date(today.getTime() + days * 86_400_000);
@@ -111,6 +106,7 @@ const companies: CompanySpec[] = [
 // ─── Seeding ────────────────────────────────────────────────────────────────
 
 async function createQuote(
+  db: Db,
   data: { companyId: string; revenueEur: number; terms: Terms; createdAt: Date },
   status: 'draft' | 'signed',
 ) {
@@ -121,8 +117,9 @@ async function createQuote(
     options: data.terms.options,
   };
   const { premiumCents, breakdown } = priceQuote(input);
-  return prisma.quote.create({
-    data: {
+  const [row] = await db
+    .insert(quote)
+    .values({
       companyId: data.companyId,
       status,
       coverageLimitCents: input.coverageLimitCents,
@@ -132,24 +129,27 @@ async function createQuote(
       pricingBreakdown: breakdown,
       createdAt: data.createdAt,
       updatedAt: data.createdAt,
-    },
-  });
+    })
+    .returning();
+  return row;
 }
 
-async function seedCompany(spec: CompanySpec) {
+async function seedCompany(db: Db, spec: CompanySpec) {
   const startDate = spec.contract ? daysFromToday(-spec.contract.signedDaysAgo) : null;
-  const company = await prisma.company.create({
-    data: {
+  const [created] = await db
+    .insert(company)
+    .values({
       name: spec.name,
-      annualRevenueCents: BigInt(spec.revenueEur * 100),
+      annualRevenueCents: spec.revenueEur * 100,
       createdAt: startDate ? new Date(startDate.getTime() - 15 * 86_400_000) : daysFromToday(-5),
-    },
-  });
+    })
+    .returning();
 
   if (spec.contract && startDate) {
-    const quote = await createQuote(
+    const signed = await createQuote(
+      db,
       {
-        companyId: company.id,
+        companyId: created.id,
         revenueEur: spec.revenueEur,
         terms: spec.contract.terms ?? standard,
         createdAt: new Date(startDate.getTime() - 10 * 86_400_000),
@@ -159,36 +159,35 @@ async function seedCompany(spec: CompanySpec) {
     // The contract starts and ends as it would if the quote were validated that day.
     const { endDate } = Contract.start(
       {
-        quoteId: quote.id,
-        companyId: company.id,
-        premiumCents: quote.premiumCents,
+        quoteId: signed.id,
+        companyId: created.id,
+        premiumCents: signed.premiumCents,
         terms: {
-          coverageLimitCents: quote.coverageLimitCents,
-          deductibleCents: quote.deductibleCents,
-          options: quote.options,
+          coverageLimitCents: signed.coverageLimitCents,
+          deductibleCents: signed.deductibleCents,
+          options: signed.options,
         },
       },
       startDate,
     ).getProps();
-    await prisma.contract.create({
-      data: {
-        quoteId: quote.id,
-        companyId: company.id,
-        startDate,
-        endDate,
-        premiumCents: quote.premiumCents,
-        coverageLimitCents: quote.coverageLimitCents,
-        deductibleCents: quote.deductibleCents,
-        options: quote.options,
-        createdAt: startDate,
-      },
+    await db.insert(contract).values({
+      quoteId: signed.id,
+      companyId: created.id,
+      startDate,
+      endDate,
+      premiumCents: signed.premiumCents,
+      coverageLimitCents: signed.coverageLimitCents,
+      deductibleCents: signed.deductibleCents,
+      options: signed.options,
+      createdAt: startDate,
     });
   }
 
   if (spec.draft) {
     await createQuote(
+      db,
       {
-        companyId: company.id,
+        companyId: created.id,
         revenueEur: spec.revenueEur,
         terms: spec.draft,
         createdAt: daysFromToday(-3),
@@ -198,20 +197,15 @@ async function seedCompany(spec: CompanySpec) {
   }
 }
 
-async function main() {
-  if (process.argv.includes('--if-empty') && (await prisma.company.count()) > 0) {
-    console.log('Database already seeded, skipping. Run `pnpm db:reset` to start over.');
-    return;
-  }
-  for (const company of companies) {
-    await seedCompany(company);
-  }
-  console.log(`Seeded ${companies.length} companies.`);
+export async function isSeeded(db: Db): Promise<boolean> {
+  const [{ companies }] = await db.select({ companies: count() }).from(company);
+  return companies > 0;
 }
 
-main()
-  .catch((error) => {
-    console.error(error);
-    process.exitCode = 1;
-  })
-  .finally(() => prisma.$disconnect());
+/** Returns what it seeded. */
+export async function seedData(db: Db): Promise<string> {
+  for (const spec of companies) {
+    await seedCompany(db, spec);
+  }
+  return `seeded ${companies.length} companies.`;
+}

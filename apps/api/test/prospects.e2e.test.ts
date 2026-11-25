@@ -1,25 +1,28 @@
 import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 
-import type { PrismaService } from 'src/common/prisma/prisma.service';
+import type { Db } from 'src/core/infra/db/database';
+import { company, quote } from 'src/distribution/infra/db/schema';
 
-import { createTestApp, prospectInput, resetDatabase } from './helpers';
+import { createTestApp, prospectInput } from './helpers';
 
 describe('Prospects (e2e)', () => {
   let app: INestApplication;
-  let prisma: PrismaService;
+  let db: Db;
 
   const api = () => request(app.getHttpServer());
 
   beforeAll(async () => {
-    ({ app, prisma } = await createTestApp());
+    ({ app, db } = await createTestApp());
   });
-  beforeEach(() => resetDatabase(prisma));
   afterAll(() => app.close());
 
   it('creates a company and its draft quote, priced by the pricing context', async () => {
-    const { body: created } = await api().post('/api/prospects').send(prospectInput).expect(201);
-    const { body } = await api().get(`/api/prospects/${created.id}`).expect(200);
+    const { body: created } = await api()
+      .post('/api/distribution/prospects')
+      .send(prospectInput)
+      .expect(201);
+    const { body } = await api().get(`/api/distribution/prospects/${created.id}`).expect(200);
 
     expect(body.company).toMatchObject(prospectInput);
     expect(body.quote).toMatchObject({
@@ -34,25 +37,25 @@ describe('Prospects (e2e)', () => {
 
   it('rejects a company above the maximum eligible revenue and saves nothing', async () => {
     const { body } = await api()
-      .post('/api/prospects')
+      .post('/api/distribution/prospects')
       .send({ ...prospectInput, annualRevenueCents: 5_000_000_001 })
       .expect(422);
 
     expect(body).toMatchObject({ code: 'pricing.revenueNotEligible' });
-    expect(await prisma.db.company.count()).toBe(0);
+    expect(await db.$count(company)).toBe(0);
   });
 
   it('rejects an invalid body', async () => {
     await api()
-      .post('/api/prospects')
+      .post('/api/distribution/prospects')
       .send({ ...prospectInput, name: ' ' })
       .expect(400);
   });
 
   it('lists the prospects', async () => {
-    await api().post('/api/prospects').send(prospectInput).expect(201);
+    await api().post('/api/distribution/prospects').send(prospectInput).expect(201);
 
-    const { body } = await api().get('/api/prospects').expect(200);
+    const { body } = await api().get('/api/distribution/prospects').expect(200);
 
     expect(body).toEqual([
       expect.objectContaining({
@@ -68,11 +71,14 @@ describe('Prospects (e2e)', () => {
   });
 
   it('deletes a prospect, with its quote', async () => {
-    const { body: created } = await api().post('/api/prospects').send(prospectInput).expect(201);
+    const { body: created } = await api()
+      .post('/api/distribution/prospects')
+      .send(prospectInput)
+      .expect(201);
 
-    await api().delete(`/api/prospects/${created.id}`).expect(204);
+    await api().delete(`/api/distribution/prospects/${created.id}`).expect(204);
 
-    await api().get(`/api/prospects/${created.id}`).expect(404);
-    expect(await prisma.db.quote.count()).toBe(0);
+    await api().get(`/api/distribution/prospects/${created.id}`).expect(404);
+    expect(await db.$count(quote)).toBe(0);
   });
 });
