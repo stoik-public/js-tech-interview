@@ -1,6 +1,6 @@
 import { defineConfig, type OxlintOverride } from 'oxlint';
 
-const BOUNDED_CONTEXTS = ['pricing', 'distribution'] as const;
+const BOUNDED_CONTEXTS = ['pricing', 'distribution', 'scoring', 'protect'] as const;
 
 /** The database libraries: adapters use them, the model and the use cases never do. */
 const DATABASE = ['drizzle-orm', 'drizzle-orm/*', 'drizzle-kit', 'pg'];

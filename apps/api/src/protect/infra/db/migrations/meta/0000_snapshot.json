@@ -1,0 +1,215 @@
+{
+  "id": "6ab5942c-af6c-42f4-ab54-5dfa79ec7603",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "protect.assessment": {
+      "name": "assessment",
+      "schema": "protect",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "companyId": {
+          "name": "companyId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "AssessmentStatus",
+          "typeSchema": "protect",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'draft'"
+        },
+        "phishingClickRatePct": {
+          "name": "phishingClickRatePct",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "leakedPasswords": {
+          "name": "leakedPasswords",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "unhandledAlerts": {
+          "name": "unhandledAlerts",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "score": {
+          "name": "score",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "band": {
+          "name": "band",
+          "type": "Band",
+          "typeSchema": "protect",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "scoreBreakdown": {
+          "name": "scoreBreakdown",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "publishedAt": {
+          "name": "publishedAt",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "assessment_companyId_idx": {
+          "name": "assessment_companyId_idx",
+          "columns": [
+            {
+              "expression": "companyId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "assessment_one_draft_per_company_key": {
+          "name": "assessment_one_draft_per_company_key",
+          "columns": [
+            {
+              "expression": "companyId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"protect\".\"assessment\".\"status\" = 'draft'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "assessment_companyId_company_id_fk": {
+          "name": "assessment_companyId_company_id_fk",
+          "tableFrom": "assessment",
+          "tableTo": "company",
+          "schemaTo": "protect",
+          "columnsFrom": [
+            "companyId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "protect.company": {
+      "name": "company",
+      "schema": "protect",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {
+    "protect.AssessmentStatus": {
+      "name": "AssessmentStatus",
+      "schema": "protect",
+      "values": [
+        "draft",
+        "published"
+      ]
+    },
+    "protect.Band": {
+      "name": "Band",
+      "schema": "protect",
+      "values": [
+        "Critical",
+        "Weak",
+        "Good"
+      ]
+    }
+  },
+  "schemas": {
+    "protect": "protect"
+  },
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

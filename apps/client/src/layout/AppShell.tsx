@@ -1,10 +1,14 @@
-import { IconAddressBook, IconBriefcase, IconShieldLock, type Icon } from '@tabler/icons-react';
+import {
+  IconAddressBook,
+  IconBriefcase,
+  IconBuildingSkyscraper,
+  type Icon,
+} from '@tabler/icons-react';
 import type { ReactNode } from 'react';
-import { NavLink, Outlet, useNavigate } from 'react-router';
+import { NavLink, Outlet } from 'react-router';
 
-import { useTests } from '../lib/server-state';
-import { Select } from '../ui/Select';
 import { useCurrentTest } from './current-test';
+import { SpaceSwitcher } from './SpaceSwitcher';
 
 /** The sidebar of each hiring test. */
 const navigation: Record<string, () => ReactNode> = {
@@ -18,6 +22,11 @@ const navigation: Record<string, () => ReactNode> = {
         Contracts
       </SidebarItem>
     </>
+  ),
+  protect: () => (
+    <SidebarItem to="/protect/companies" icon={IconBuildingSkyscraper}>
+      Companies
+    </SidebarItem>
   ),
 };
 
@@ -38,10 +47,9 @@ export function AppShell() {
         aria-label="Main"
         className="border-gray-2 flex items-center gap-1 border-b px-2 py-1.5 sm:h-screen sm:w-[248px] sm:shrink-0 sm:flex-col sm:items-stretch sm:gap-0 sm:border-0 sm:p-0 sm:pb-2"
       >
-        <div className="flex shrink-0 items-center px-2 sm:my-2 sm:h-14 sm:px-4">
-          <SpaceLogo />
+        <div className="shrink-0 sm:px-2 sm:pt-2 sm:pb-3">
+          <SpaceSwitcher current={test} />
         </div>
-        <TestSwitcher current={test} />
         <div className="flex min-w-0 grow items-center gap-1 overflow-x-auto sm:block sm:space-y-1 sm:overflow-y-auto sm:px-2 sm:pb-2">
           {Navigation && <Navigation />}
         </div>
@@ -55,37 +63,6 @@ export function AppShell() {
           <Outlet />
         </main>
       </div>
-    </div>
-  );
-}
-
-/** Switches between the hiring tests: each one has its own pages, tables and routes. */
-function TestSwitcher({ current }: { current: string | null }) {
-  const tests = useTests();
-  const navigate = useNavigate();
-  if (!tests.data) return null;
-  return (
-    <div className="hidden px-4 pb-3 sm:block">
-      <Select
-        label="Test"
-        options={tests.data.map((test) => ({ value: test.id, label: test.name }))}
-        value={current}
-        onChange={(id) => navigate(`/${id}`)}
-      />
-    </div>
-  );
-}
-
-function SpaceLogo() {
-  return (
-    <div className="flex items-center gap-2">
-      <span className="bg-blue flex size-8 items-center justify-center rounded-sm text-white">
-        <IconShieldLock aria-hidden size={18} stroke={1.75} />
-      </span>
-      <span className="hidden leading-tight sm:block">
-        <span className="block text-sm font-semibold">Stoïk</span>
-        <span className="text-gray-7 block text-xs">Broker Space</span>
-      </span>
     </div>
   );
 }

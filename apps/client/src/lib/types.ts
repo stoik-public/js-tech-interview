@@ -88,3 +88,55 @@ export type PricingCatalog = {
 
 /** A hiring test this app hosts, and the bounded contexts of the API it is about. */
 export type HiringTest = { id: string; name: string; contexts: string[] };
+
+// ─── Protect ────────────────────────────────────────────────────────────────
+
+export type Signal = 'phishingClickRatePct' | 'leakedPasswords' | 'unhandledAlerts';
+
+/** Whole numbers. The phishing click rate is a percentage. */
+export type SecuritySignals = Record<Signal, number>;
+
+export type Band = 'Critical' | 'Weak' | 'Good';
+
+export type AssessmentStatus = 'draft' | 'published';
+
+export type ScoreBreakdown = {
+  lines: { signal: Signal; value: number; tierUpTo: number | null; penalty: number }[];
+  totalPenalty: number;
+};
+
+export type Assessment = {
+  id: string;
+  companyId: string;
+  status: AssessmentStatus;
+  signals: SecuritySignals;
+  score: number;
+  band: Band;
+  scoreBreakdown: ScoreBreakdown;
+  createdAt: string;
+  updatedAt: string;
+  publishedAt: string | null;
+};
+
+export type ProtectCompany = { id: string; name: string; createdAt: string };
+
+/** A published assessment, as listed and charted. */
+export type ReportSummary = Pick<Assessment, 'id' | 'score' | 'band'> & { publishedAt: string };
+
+export type ProtectCompanyListItem = ProtectCompany & {
+  latestReport: ReportSummary | null;
+  draft: Pick<Assessment, 'id' | 'score' | 'band'> | null;
+};
+
+export type ProtectCompanyDetail = {
+  company: ProtectCompany;
+  /** The assessment in progress, if any. */
+  draft: Assessment | null;
+  /** Newest first. */
+  reports: ReportSummary[];
+};
+
+export type ReportDetail = Assessment & { company: ProtectCompany };
+
+/** The band legend: the scores each band covers, from the lowest band up. */
+export type ScoreScale = { bands: { band: Band; minScore: number; maxScore: number }[] };

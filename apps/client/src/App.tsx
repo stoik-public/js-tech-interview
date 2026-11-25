@@ -5,6 +5,9 @@ import { ContractPage } from './pages/contract/ContractPage';
 import { ContractsPage } from './pages/ContractsPage';
 import { ProspectPage } from './pages/prospect/ProspectPage';
 import { ProspectsPage } from './pages/ProspectsPage';
+import { CompaniesPage } from './pages/protect/CompaniesPage';
+import { CompanyPage } from './pages/protect/company/CompanyPage';
+import { ReportPage } from './pages/protect/report/ReportPage';
 import { Toolbox } from './toolbox/Toolbox';
 
 export function App() {
@@ -20,6 +23,12 @@ export function App() {
             <Route path="prospects/:companyId" element={<ProspectPage />} />
             <Route path="contracts" element={<ContractsPage />} />
             <Route path="contracts/:contractId" element={<ContractPage />} />
+          </Route>
+          <Route path="protect">
+            <Route index element={<Navigate to="companies" replace />} />
+            <Route path="companies" element={<CompaniesPage />} />
+            <Route path="companies/:companyId" element={<CompanyPage />} />
+            <Route path="reports/:assessmentId" element={<ReportPage />} />
           </Route>
         </Route>
       </Routes>

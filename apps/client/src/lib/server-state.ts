@@ -2,7 +2,15 @@ import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tansta
 import { useMemo } from 'react';
 
 import { api } from './api';
-import type { ContractDetail, ProspectDetail, Quote, QuoteConfiguration } from './types';
+import type {
+  Assessment,
+  ContractDetail,
+  ProspectDetail,
+  ProtectCompanyDetail,
+  Quote,
+  QuoteConfiguration,
+  SecuritySignals,
+} from './types';
 
 /**
  * What the client holds of the API's data. Pages read and change it through this module only: it
@@ -17,6 +25,10 @@ export const queryKeys = {
   contract: (contractId: string) => ['contract', contractId] as const,
   pricingCatalog: ['pricing-catalog'] as const,
   tests: ['tests'] as const,
+  scoreScale: ['score-scale'] as const,
+  protectCompanies: ['protect-companies'] as const,
+  protectCompany: (companyId: string) => ['protect-company', companyId] as const,
+  report: (assessmentId: string) => ['report', assessmentId] as const,
 };
 
 export const useProspects = () =>
@@ -122,3 +134,76 @@ export const readCachedProspect = (queryClient: QueryClient, companyId: string) 
 
 export const readCachedContract = (queryClient: QueryClient, contractId: string) =>
   queryClient.getQueryData<ContractDetail>(queryKeys.contract(contractId));
+
+// ─── Protect ────────────────────────────────────────────────────────────────
+
+export const useProtectCompanies = () =>
+  useQuery({ queryKey: queryKeys.protectCompanies, queryFn: api.protectCompanies });
+
+export const useProtectCompany = (companyId: string) =>
+  useQuery({
+    queryKey: queryKeys.protectCompany(companyId),
+    queryFn: () => api.protectCompany(companyId),
+  });
+
+export const useReport = (assessmentId: string) =>
+  useQuery({ queryKey: queryKeys.report(assessmentId), queryFn: () => api.report(assessmentId) });
+
+/** The band legend. It only changes with a release of the API, so it is fetched once. */
+export const useScoreScale = () =>
+  useQuery({ queryKey: queryKeys.scoreScale, queryFn: api.scoreScale, staleTime: Infinity });
+
+/** Starts the next month's draft of a company. */
+export function useStartAssessment() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (companyId: string) => api.startAssessment(companyId),
+    onSuccess: (assessment) => {
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.protectCompany(assessment.companyId),
+      });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.protectCompanies });
+    },
+  });
+}
+
+/** Freezes a draft as a report: the company page shows it with the reports, never as a draft. */
+export function usePublishAssessment() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (assessmentId: string) => api.publishAssessment(assessmentId),
+    onSuccess: (report) => {
+      queryClient.setQueryData<ProtectCompanyDetail>(
+        queryKeys.protectCompany(report.companyId),
+        (detail) => detail && { ...detail, draft: null },
+      );
+      void queryClient.invalidateQueries({ queryKey: queryKeys.protectCompany(report.companyId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.protectCompanies });
+    },
+  });
+}
+
+/**
+ * Saving the signals of a draft is split in two, like a quote: the caller applies the response of
+ * the latest change only, so that a slow response to an older change cannot overwrite it.
+ */
+export function useSignalUpdates(companyId: string) {
+  const queryClient = useQueryClient();
+  return useMemo(
+    () => ({
+      /** The API saves the signals and re-scores the draft. */
+      save: (assessmentId: string, signals: SecuritySignals) =>
+        api.updateSignals(assessmentId, signals),
+
+      /** Shows a re-scored draft where the company appears: its page now, the list when it opens. */
+      applySaved: (assessment: Assessment) => {
+        queryClient.setQueryData<ProtectCompanyDetail>(
+          queryKeys.protectCompany(companyId),
+          (detail) => detail && { ...detail, draft: assessment },
+        );
+        void queryClient.invalidateQueries({ queryKey: queryKeys.protectCompanies });
+      },
+    }),
+    [queryClient, companyId],
+  );
+}

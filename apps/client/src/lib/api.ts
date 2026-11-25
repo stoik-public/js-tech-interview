@@ -1,13 +1,19 @@
 import type {
+  Assessment,
   Contract,
   ContractDetail,
   ContractListItem,
   HiringTest,
   PricingCatalog,
   ProspectDetail,
+  ProtectCompanyDetail,
+  ProtectCompanyListItem,
   ProspectListItem,
   Quote,
   QuoteConfiguration,
+  ReportDetail,
+  ScoreScale,
+  SecuritySignals,
 } from './types';
 
 export class ApiError extends Error {
@@ -59,4 +65,18 @@ export const api = {
   contracts: () => request<ContractListItem[]>('GET', '/distribution/contracts'),
   contract: (contractId: string) =>
     request<ContractDetail>('GET', `/distribution/contracts/${contractId}`),
+
+  // Protect
+  scoreScale: () => request<ScoreScale>('GET', '/scoring/scale'),
+  protectCompanies: () => request<ProtectCompanyListItem[]>('GET', '/protect/companies'),
+  protectCompany: (companyId: string) =>
+    request<ProtectCompanyDetail>('GET', `/protect/companies/${companyId}`),
+  startAssessment: (companyId: string) =>
+    request<Assessment>('POST', `/protect/companies/${companyId}/assessments`),
+  updateSignals: (assessmentId: string, signals: SecuritySignals) =>
+    request<Assessment>('PUT', `/protect/assessments/${assessmentId}`, signals),
+  publishAssessment: (assessmentId: string) =>
+    request<Assessment>('POST', `/protect/assessments/${assessmentId}/publish`),
+  report: (assessmentId: string) =>
+    request<ReportDetail>('GET', `/protect/reports/${assessmentId}`),
 };
