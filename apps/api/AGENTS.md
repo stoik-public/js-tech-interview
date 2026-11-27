@@ -8,19 +8,21 @@ src/
 │   ├── domain/      Entity, DomainError, Clock and UnitOfWork ports
 │   └── infra/       config, error filter, database (db/) and developer routes (dev/)
 ├── pricing/         pricing rules and the premium formula
-└── distribution/    companies, quotes and contracts
+├── distribution/    companies, quotes and contracts
+├── scoring/         scoring rules and the security score formula
+└── protect/         companies and their security reports
 seed/                demo data of every test
 scripts/db.ts        database commands: generate, migrate, seed, reset
 ```
 
-`core/infra/dev/tests.ts` lists the hiring tests and the contexts each one is about (Insurance: `distribution` and `pricing`). The client's test switcher and the toolbox read it, so a candidate only sees the tables and routes of their test.
+`core/infra/dev/tests.ts` lists the hiring tests and the contexts each one is about (Insurance: `distribution` and `pricing`, Protect: `protect` and `scoring`). The client's test switcher and the toolbox read it, so a candidate only sees the tables and routes of their test.
 
 Each context:
 
 ```
 <context>/
 ├── <context>.module.ts      binds ports to adapters, declares controllers and use cases
-├── public-api.ts            what other contexts may use (pricing only, today: `priceQuote`)
+├── public-api.ts            what other contexts may use (`priceQuote`, `scoreSignals`)
 ├── domain/                  entities, rules, error codes, ports/*.port.ts. No Nest, no database.
 ├── use-cases/<verb-noun>/   use-case.ts, controller.http.ts, dto.http.ts, use-case.test.ts
 ├── infra/                   adapters/<port>.<drizzle|in-memory|in-process|stub>.ts, mappers/,

@@ -88,3 +88,55 @@ export type PricingCatalog = {
 
 /** A hiring test this app hosts, and the bounded contexts of the API it is about. */
 export type HiringTest = { id: string; name: string; contexts: string[] };
+
+// ─── Protect ────────────────────────────────────────────────────────────────
+
+export type Signal = 'phishingClickRatePct' | 'leakedPasswords' | 'unhandledAlerts';
+
+/** Whole numbers. The phishing click rate is a percentage. */
+export type SecuritySignals = Record<Signal, number>;
+
+export type SecurityLevel = 'Critical' | 'Weak' | 'Good';
+
+export type ReportStatus = 'draft' | 'published';
+
+export type ScoreBreakdown = {
+  lines: { signal: Signal; value: number; tierUpTo: number | null; penalty: number }[];
+  totalPenalty: number;
+};
+
+export type Report = {
+  id: string;
+  companyId: string;
+  status: ReportStatus;
+  signals: SecuritySignals;
+  score: number;
+  level: SecurityLevel;
+  scoreBreakdown: ScoreBreakdown;
+  createdAt: string;
+  updatedAt: string;
+  publishedAt: string | null;
+};
+
+export type ProtectCompany = { id: string; name: string; createdAt: string };
+
+/** A published report, as listed and charted. */
+export type ReportSummary = Pick<Report, 'id' | 'score' | 'level'> & { publishedAt: string };
+
+export type ProtectCompanyListItem = ProtectCompany & {
+  latestReport: ReportSummary | null;
+  draft: Pick<Report, 'id' | 'score' | 'level'> | null;
+};
+
+export type ProtectCompanyDetail = {
+  company: ProtectCompany;
+  /** The report in progress, if any. */
+  draft: Report | null;
+  /** Newest first. */
+  reports: ReportSummary[];
+};
+
+export type ReportDetail = Report & { company: ProtectCompany };
+
+/** The security level legend: the scores each level covers, from the lowest level up. */
+export type ScoreScale = { levels: { level: SecurityLevel; minScore: number; maxScore: number }[] };

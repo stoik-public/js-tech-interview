@@ -42,6 +42,7 @@ describe('Developer routes (e2e)', () => {
 
     expect(body).toEqual([
       { id: 'insurance', name: 'Insurance', contexts: ['distribution', 'pricing'] },
+      { id: 'protect', name: 'Protect', contexts: ['protect', 'scoring'] },
     ]);
   });
 
@@ -73,5 +74,20 @@ describe('Developer routes (e2e)', () => {
       expect.objectContaining({ name: 'QuoteStatus', values: ['draft', 'signed'] }),
     );
     await api().get('/api/dev/data-model/unknown').expect(404);
+  });
+
+  it('keeps each test to its own tables and routes', async () => {
+    const { body: model } = await api().get('/api/dev/data-model/protect').expect(200);
+    expect(model.tables.map((table: { id: string }) => table.id)).toEqual([
+      'protect.company',
+      'protect.report',
+    ]);
+    expect(model.enums).toContainEqual(
+      expect.objectContaining({ name: 'SecurityLevel', values: ['Critical', 'Weak', 'Good'] }),
+    );
+
+    const { body: routes } = await api().get('/api/dev/routes?test=protect').expect(200);
+    const contexts = new Set(routes.map((route: { context: string }) => route.context));
+    expect([...contexts].sort()).toEqual(['protect', 'scoring']);
   });
 });

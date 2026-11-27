@@ -7,4 +7,5 @@ export type Test = { id: string; name: string; contexts: readonly string[] };
 
 export const TESTS: readonly Test[] = [
   { id: 'insurance', name: 'Insurance', contexts: ['distribution', 'pricing'] },
+  { id: 'protect', name: 'Protect', contexts: ['protect', 'scoring'] },
 ];

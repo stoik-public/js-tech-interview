@@ -2,7 +2,15 @@ import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tansta
 import { useMemo } from 'react';
 
 import { api } from './api';
-import type { ContractDetail, ProspectDetail, Quote, QuoteConfiguration } from './types';
+import type {
+  Report,
+  ContractDetail,
+  ProspectDetail,
+  ProtectCompanyDetail,
+  Quote,
+  QuoteConfiguration,
+  SecuritySignals,
+} from './types';
 
 /**
  * What the client holds of the API's data. Pages read and change it through this module only: it
@@ -17,6 +25,10 @@ export const queryKeys = {
   contract: (contractId: string) => ['contract', contractId] as const,
   pricingCatalog: ['pricing-catalog'] as const,
   tests: ['tests'] as const,
+  scoreScale: ['score-scale'] as const,
+  protectCompanies: ['protect-companies'] as const,
+  protectCompany: (companyId: string) => ['protect-company', companyId] as const,
+  report: (reportId: string) => ['report', reportId] as const,
 };
 
 export const useProspects = () =>
@@ -122,3 +134,75 @@ export const readCachedProspect = (queryClient: QueryClient, companyId: string) 
 
 export const readCachedContract = (queryClient: QueryClient, contractId: string) =>
   queryClient.getQueryData<ContractDetail>(queryKeys.contract(contractId));
+
+// ─── Protect ────────────────────────────────────────────────────────────────
+
+export const useProtectCompanies = () =>
+  useQuery({ queryKey: queryKeys.protectCompanies, queryFn: api.protectCompanies });
+
+export const useProtectCompany = (companyId: string) =>
+  useQuery({
+    queryKey: queryKeys.protectCompany(companyId),
+    queryFn: () => api.protectCompany(companyId),
+  });
+
+export const useReport = (reportId: string) =>
+  useQuery({ queryKey: queryKeys.report(reportId), queryFn: () => api.report(reportId) });
+
+/** The security level legend. It only changes with a release of the API, so it is fetched once. */
+export const useScoreScale = () =>
+  useQuery({ queryKey: queryKeys.scoreScale, queryFn: api.scoreScale, staleTime: Infinity });
+
+/** Starts the next month's draft of a company. */
+export function useStartReport() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (companyId: string) => api.startReport(companyId),
+    onSuccess: (report) => {
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.protectCompany(report.companyId),
+      });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.protectCompanies });
+    },
+  });
+}
+
+/** Publishes a draft report: the company page then lists it with the published reports. */
+export function usePublishReport() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (reportId: string) => api.publishReport(reportId),
+    onSuccess: (report) => {
+      queryClient.setQueryData<ProtectCompanyDetail>(
+        queryKeys.protectCompany(report.companyId),
+        (detail) => detail && { ...detail, draft: null },
+      );
+      void queryClient.invalidateQueries({ queryKey: queryKeys.protectCompany(report.companyId) });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.protectCompanies });
+    },
+  });
+}
+
+/**
+ * Saving the signals of a draft is split in two, like a quote: the caller applies the response of
+ * the latest change only, so that a slow response to an older change cannot overwrite it.
+ */
+export function useSignalUpdates(companyId: string) {
+  const queryClient = useQueryClient();
+  return useMemo(
+    () => ({
+      /** The API saves the signals and re-scores the draft. */
+      save: (reportId: string, signals: SecuritySignals) => api.updateSignals(reportId, signals),
+
+      /** Shows a re-scored draft where the company appears: its page now, the list when it opens. */
+      applySaved: (report: Report) => {
+        queryClient.setQueryData<ProtectCompanyDetail>(
+          queryKeys.protectCompany(companyId),
+          (detail) => detail && { ...detail, draft: report },
+        );
+        void queryClient.invalidateQueries({ queryKey: queryKeys.protectCompanies });
+      },
+    }),
+    [queryClient, companyId],
+  );
+}

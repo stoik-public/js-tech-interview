@@ -3,8 +3,12 @@ import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
 
 import * as insurance from './insurance';
+import * as protect from './protect';
 
-const seeds = [{ test: 'Insurance', ...insurance }];
+const seeds = [
+  { test: 'Insurance', ...insurance },
+  { test: 'Protect', ...protect },
+];
 
 /** With `ifEmpty`, a test whose data is already there is left as it is. */
 export async function seed(url: string, { ifEmpty }: { ifEmpty: boolean }): Promise<void> {
