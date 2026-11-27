@@ -6,7 +6,7 @@
     "node": ">=22.18"
   },
   "scripts": {
-    "postinstall": "node scripts/setup-env.mjs && pnpm --filter @stoik-lite/api db:generate",
+    "postinstall": "node scripts/setup-env.mjs",
     "dev": "node scripts/setup-env.mjs && docker compose up -d --wait && pnpm --filter @stoik-lite/api db:prepare && pnpm -r --parallel dev",
     "infra": "node scripts/setup-env.mjs && docker compose up -d --wait",
     "build": "pnpm -r build",
@@ -16,6 +16,8 @@
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",
     "test:e2e": "pnpm run infra && pnpm --filter @stoik-lite/api test:e2e",
+    "db:generate": "pnpm --filter @stoik-lite/api db:generate",
+    "db:migrate": "pnpm run infra && pnpm --filter @stoik-lite/api db:migrate",
     "db:reset": "pnpm run infra && pnpm --filter @stoik-lite/api db:reset",
     "lint:fix": "oxlint --config oxlint.config.mts --fix"
   },

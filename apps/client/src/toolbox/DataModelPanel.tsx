@@ -1,6 +1,7 @@
 import '@xyflow/react/dist/style.css';
 import dagre from '@dagrejs/dagre';
-import { IconInfoCircle, IconLayoutGrid } from '@tabler/icons-react';
+import { IconLayoutGrid } from '@tabler/icons-react';
+import { useQuery } from '@tanstack/react-query';
 import {
   applyNodeChanges,
   Background,
@@ -26,14 +27,37 @@ import {
 } from '@xyflow/react';
 import { useCallback, useMemo, useState } from 'react';
 
-import schemaSource from '../../../api/prisma/schema.prisma?raw';
+import { useCurrentTest } from '../layout/current-test';
+import { Alert } from '../ui/Alert';
 import { Button } from '../ui/Button';
+import { PageLoader } from '../ui/Loader';
 import { Tooltip } from '../ui/Tooltip';
-import { parsePrismaSchema, type Enum, type Model } from './prisma-schema';
 import { load, save } from './storage';
 
-/** Positions of the tables the user moved. */
-const STORAGE_KEY = 'stoik-lite.toolbox.data-model.layout';
+/** Shape returned by GET /api/dev/data-model/:test (apps/api/src/core/infra/dev/data-model.ts). */
+type DataModelResponse = {
+  tables: {
+    /** `schema.table` */
+    id: string;
+    name: string;
+    context: string;
+    columns: {
+      name: string;
+      type: string;
+      list: boolean;
+      nullable: boolean;
+      primaryKey: boolean;
+      unique: boolean;
+      enumValues: string[];
+    }[];
+    foreignKeys: { columns: string[]; references: { table: string; columns: string[] } }[];
+  }[];
+  enums: Enum[];
+};
+type Enum = { name: string; context: string; values: string[] };
+
+/** Positions of the tables the user moved, for each test. */
+const storageKey = (test: string) => `stoik-lite.toolbox.data-model.${test}.layout`;
 type SavedLayout = Record<string, XYPosition>;
 
 const NODE_WIDTH = 264;
@@ -41,8 +65,8 @@ const HEADER_HEIGHT = 40;
 const ROW_HEIGHT = 28;
 
 type Key = 'PK' | 'FK' | 'UK';
-type Column = { name: string; type: string; keys: Key[]; doc: string | null; values: string[] };
-type Table = { name: string; table: string; doc: string | null; columns: Column[] };
+type Column = { name: string; type: string; keys: Key[]; values: string[] };
+type Table = { id: string; name: string; columns: Column[] };
 /** A foreign key: `child.childField` references `parent.parentField`. */
 type Relation = {
   id: string;
@@ -63,24 +87,44 @@ const nodeTypes = { table: TableNodeView };
 const edgeTypes = { relation: RelationEdgeView };
 const NONE: ReadonlySet<string> = new Set();
 
-/** The data model, drawn from apps/api/prisma/schema.prisma as it is now. */
+async function fetchDataModel(test: string): Promise<DataModelResponse> {
+  const response = await fetch(`/api/dev/data-model/${test}`);
+  if (!response.ok) throw new Error(`Could not read the data model (${response.status}).`);
+  return response.json();
+}
+
+/** The tables of the open test, drawn from the API's Drizzle schemas as they are now. */
 export function DataModelPanel() {
-  const schema = useMemo(() => parsePrismaSchema(schemaSource), []);
+  const test = useCurrentTest() ?? 'insurance';
+  const model = useQuery({
+    queryKey: ['dev-data-model', test],
+    queryFn: () => fetchDataModel(test),
+  });
+  if (model.isPending) return <PageLoader />;
+  if (model.error) {
+    return (
+      <div className="p-4">
+        <Alert tone="red">{model.error.message}</Alert>
+      </div>
+    );
+  }
   return (
     <ReactFlowProvider>
-      <DataModel models={schema.models} enums={schema.enums} />
+      <DataModel key={test} test={test} model={model.data} />
     </ReactFlowProvider>
   );
 }
 
-type Props = { models: Model[]; enums: Enum[] };
+type Props = { test: string; model: DataModelResponse };
 
-function DataModel({ models, enums }: Props) {
-  const { tables, relations } = useMemo(() => toDiagram(models, enums), [models, enums]);
+function DataModel({ test, model }: Props) {
+  const layoutKey = storageKey(test);
+  const { enums } = model;
+  const { tables, relations } = useMemo(() => toDiagram(model), [model]);
   const [nodes, setNodes] = useState(() =>
-    toNodes(tables, relations, load<SavedLayout>(STORAGE_KEY) ?? undefined),
+    toNodes(tables, relations, load<SavedLayout>(layoutKey) ?? undefined),
   );
-  const [moved, setMoved] = useState(() => Boolean(load<SavedLayout>(STORAGE_KEY)));
+  const [moved, setMoved] = useState(() => Boolean(load<SavedLayout>(layoutKey)));
   const { fitView } = useReactFlow();
 
   const onNodesChange = useCallback(
@@ -89,14 +133,14 @@ function DataModel({ models, enums }: Props) {
   );
 
   const onNodeDragStop: OnNodeDrag<TableNode> = (_event, _node, dragged) => {
-    const positions = { ...load<SavedLayout>(STORAGE_KEY) };
+    const positions = { ...load<SavedLayout>(layoutKey) };
     for (const node of dragged) positions[node.id] = node.position;
-    save(STORAGE_KEY, positions);
+    save(layoutKey, positions);
     setMoved(true);
   };
 
   function resetLayout() {
-    save(STORAGE_KEY, null);
+    save(layoutKey, null);
     setMoved(false);
     setNodes(toNodes(tables, relations, undefined));
     requestAnimationFrame(() => void fitView({ duration: 300 }));
@@ -197,18 +241,19 @@ function DataModel({ models, enums }: Props) {
             Drag tables to arrange them. Click one to follow its relations.
           </p>
           <p className="text-gray-6 mt-1 text-xs">
-            Drawn from <code className="text-gray-8">apps/api/prisma/schema.prisma</code>
+            Drawn from each bounded context&apos;s{' '}
+            <code className="text-gray-8">infra/db/schema.ts</code>
           </p>
         </div>
         <section>
           <h3 className="mb-1 text-sm font-medium">Tables</h3>
           <ul className="-mx-2">
             {tables.map((table) => (
-              <li key={table.name}>
+              <li key={table.id}>
                 <button
                   type="button"
-                  onClick={() => focusTable(table.name)}
-                  aria-pressed={focus.has(table.name)}
+                  onClick={() => focusTable(table.id)}
+                  aria-pressed={focus.has(table.id)}
                   className="hover:bg-gray-1 aria-pressed:bg-blue-0 aria-pressed:text-blue flex w-full items-center justify-between rounded-sm px-2 py-1 text-left text-sm"
                 >
                   {table.name}
@@ -290,43 +335,38 @@ function DataModel({ models, enums }: Props) {
   );
 }
 
-function toDiagram(models: Model[], enums: Enum[]) {
-  const modelNames = new Set(models.map((model) => model.name));
-  const enumValues = new Map(enums.map((item) => [item.name, item.values]));
-
-  const tables: Table[] = models.map((model) => {
-    const foreignKeys = new Set(model.fields.flatMap((field) => field.relation?.fields ?? []));
-    const columns = model.fields
-      .filter((field) => !modelNames.has(field.type))
-      .map((field) => ({
-        name: field.name,
-        type: `${field.type}${field.list ? '[]' : ''}${field.optional ? '?' : ''}`,
-        keys: (['PK', 'FK', 'UK'] as const).filter(
-          (key) =>
-            (key === 'PK' && field.id) ||
-            (key === 'FK' && foreignKeys.has(field.name)) ||
-            (key === 'UK' && field.unique),
-        ),
-        doc: field.doc,
-        values: enumValues.get(field.type) ?? [],
-      }));
-    return { name: model.name, table: model.table, doc: model.doc, columns };
+function toDiagram({ tables: source }: DataModelResponse) {
+  const tables: Table[] = source.map((table) => {
+    const foreignKeys = new Set(table.foreignKeys.flatMap((foreignKey) => foreignKey.columns));
+    const columns = table.columns.map((column) => ({
+      name: column.name,
+      type: `${column.type}${column.list ? '[]' : ''}${column.nullable ? '?' : ''}`,
+      keys: (['PK', 'FK', 'UK'] as const).filter(
+        (key) =>
+          (key === 'PK' && column.primaryKey) ||
+          (key === 'FK' && foreignKeys.has(column.name)) ||
+          (key === 'UK' && column.unique),
+      ),
+      values: column.enumValues,
+    }));
+    return { id: table.id, name: table.name, columns };
   });
 
-  const relations: Relation[] = models.flatMap((model) =>
-    model.fields.flatMap(({ type, optional, relation }) =>
-      relation
-        ? relation.fields.map((childField, index) => ({
-            id: `${model.name}.${childField}`,
-            parent: type,
-            parentField: relation.references[index],
-            child: model.name,
-            childField,
-            optional,
-            // One row of the parent for one row of the child when the foreign key is unique.
-            oneToOne: model.fields.some((field) => field.name === childField && field.unique),
-          }))
-        : [],
+  const relations: Relation[] = source.flatMap((table) =>
+    table.foreignKeys.flatMap(({ columns, references }) =>
+      columns.map((childField, index) => {
+        const column = table.columns.find((candidate) => candidate.name === childField);
+        return {
+          id: `${table.id}.${childField}`,
+          parent: references.table,
+          parentField: references.columns[index],
+          child: table.id,
+          childField,
+          optional: column?.nullable ?? false,
+          // One row of the parent for one row of the child when the foreign key is unique.
+          oneToOne: column?.unique ?? false,
+        };
+      }),
     ),
   );
   return { tables, relations };
@@ -342,17 +382,17 @@ function toNodes(
   graph.setGraph({ rankdir: 'LR', nodesep: 40, ranksep: 120 });
   graph.setDefaultEdgeLabel(() => ({}));
   for (const table of tables) {
-    graph.setNode(table.name, { width: NODE_WIDTH, height: tableHeight(table) });
+    graph.setNode(table.id, { width: NODE_WIDTH, height: tableHeight(table) });
   }
   for (const r of relations) if (r.parent !== r.child) graph.setEdge(r.parent, r.child);
   dagre.layout(graph);
 
   return tables.map((table) => {
-    const { x, y } = graph.node(table.name);
+    const { x, y } = graph.node(table.id);
     return {
-      id: table.name,
+      id: table.id,
       type: 'table',
-      position: saved?.[table.name] ?? {
+      position: saved?.[table.id] ?? {
         x: x - NODE_WIDTH / 2,
         y: y - tableHeight(table) / 2,
       },
@@ -391,8 +431,7 @@ function TableNodeView({ data, selected }: NodeProps<TableNode>) {
     >
       <div className="border-gray-2 bg-gray-1 flex h-10 items-center gap-1.5 rounded-t-md border-b px-3">
         <span className="font-medium">{table.name}</span>
-        {table.doc && <Hint text={table.doc} />}
-        <code className="text-gray-6 ml-auto text-xs">{table.table}</code>
+        <code className="text-gray-6 ml-auto text-xs">{table.id}</code>
       </div>
       {table.columns.map((column) => (
         <div
@@ -407,7 +446,6 @@ function TableNodeView({ data, selected }: NodeProps<TableNode>) {
             ))}
           </span>
           <span className="truncate">{column.name}</span>
-          {column.doc && <Hint text={column.doc} />}
           <Tooltip content={column.values.length > 0 ? column.values.join(', ') : null}>
             <span
               className={`ml-auto shrink-0 pl-2 text-xs ${column.values.length > 0 ? 'text-cyan-7' : 'text-gray-6'}`}
@@ -506,15 +544,5 @@ function KeyBadge({ kind }: { kind: Key }) {
     <span className={`rounded-xs px-1 text-[10px] leading-4 font-medium ${keyClasses[kind]}`}>
       {kind}
     </span>
-  );
-}
-
-function Hint({ text }: { text: string }) {
-  return (
-    <Tooltip content={text}>
-      <span className="text-gray-5 hover:text-gray-8 inline-flex shrink-0">
-        <IconInfoCircle aria-label="Description" size={14} stroke={1.5} />
-      </span>
-    </Tooltip>
   );
 }

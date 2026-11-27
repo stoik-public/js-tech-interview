@@ -1,9 +1,39 @@
-import { IconAddressBook, IconBriefcase, IconShieldLock, type Icon } from '@tabler/icons-react';
+import {
+  IconAddressBook,
+  IconBriefcase,
+  IconBuildingSkyscraper,
+  type Icon,
+} from '@tabler/icons-react';
 import type { ReactNode } from 'react';
 import { NavLink, Outlet } from 'react-router';
 
+import { useCurrentTest } from './current-test';
+import { SpaceSwitcher } from './SpaceSwitcher';
+
+/** The sidebar of each hiring test. */
+const navigation: Record<string, () => ReactNode> = {
+  insurance: () => (
+    <>
+      <SidebarItem to="/insurance/prospects" icon={IconAddressBook}>
+        Prospects
+      </SidebarItem>
+      <p className="text-gray hidden px-3 py-2 text-xs font-medium sm:block">Portfolio</p>
+      <SidebarItem to="/insurance/contracts" icon={IconBriefcase}>
+        Contracts
+      </SidebarItem>
+    </>
+  ),
+  protect: () => (
+    <SidebarItem to="/protect/companies" icon={IconBuildingSkyscraper}>
+      Companies
+    </SidebarItem>
+  ),
+};
+
 /** Shell of every page: navigation, then the page in a white panel. */
 export function AppShell() {
+  const test = useCurrentTest();
+  const Navigation = test ? navigation[test] : undefined;
   return (
     <div className="bg-gray-0 min-h-screen sm:flex sm:h-screen">
       <a
@@ -17,17 +47,11 @@ export function AppShell() {
         aria-label="Main"
         className="border-gray-2 flex items-center gap-1 border-b px-2 py-1.5 sm:h-screen sm:w-[248px] sm:shrink-0 sm:flex-col sm:items-stretch sm:gap-0 sm:border-0 sm:p-0 sm:pb-2"
       >
-        <div className="flex shrink-0 items-center px-2 sm:my-2 sm:h-14 sm:px-4">
-          <SpaceLogo />
+        <div className="shrink-0 sm:px-2 sm:pt-2 sm:pb-3">
+          <SpaceSwitcher current={test} />
         </div>
         <div className="flex min-w-0 grow items-center gap-1 overflow-x-auto sm:block sm:space-y-1 sm:overflow-y-auto sm:px-2 sm:pb-2">
-          <SidebarItem to="/prospects" icon={IconAddressBook}>
-            Prospects
-          </SidebarItem>
-          <p className="text-gray hidden px-3 py-2 text-xs font-medium sm:block">Portfolio</p>
-          <SidebarItem to="/contracts" icon={IconBriefcase}>
-            Contracts
-          </SidebarItem>
+          {Navigation && <Navigation />}
         </div>
       </nav>
       <div className="flex min-w-0 flex-1 flex-col sm:overflow-hidden sm:p-2">
@@ -39,20 +63,6 @@ export function AppShell() {
           <Outlet />
         </main>
       </div>
-    </div>
-  );
-}
-
-function SpaceLogo() {
-  return (
-    <div className="flex items-center gap-2">
-      <span className="bg-blue flex size-8 items-center justify-center rounded-sm text-white">
-        <IconShieldLock aria-hidden size={18} stroke={1.75} />
-      </span>
-      <span className="hidden leading-tight sm:block">
-        <span className="block text-sm font-semibold">Stoïk</span>
-        <span className="text-gray-7 block text-xs">Broker Space</span>
-      </span>
     </div>
   );
 }

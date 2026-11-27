@@ -20,7 +20,7 @@ const isInvalidated = (queryClient: ReturnType<typeof createQueryClient>, key: r
 
 describe('reads', () => {
   it('loads a prospect under its own key', async () => {
-    fakeApi({ 'GET /prospects/company-1': () => ok(prospectDetail()) });
+    fakeApi({ 'GET /distribution/prospects/company-1': () => ok(prospectDetail()) });
     const queryClient = createQueryClient();
 
     const { result } = renderHook(() => useProspect('company-1'), {
@@ -59,8 +59,8 @@ describe('reads', () => {
 describe('creating a prospect', () => {
   it('makes the prospects list refetch', async () => {
     const api = fakeApi({
-      'GET /prospects': () => ok([]),
-      'POST /prospects': () => ok({ id: 'company-2' }),
+      'GET /distribution/prospects': () => ok([]),
+      'POST /distribution/prospects': () => ok({ id: 'company-2' }),
     });
     const queryClient = createQueryClient();
     queryClient.setQueryData(queryKeys.prospects, []);
@@ -77,7 +77,7 @@ describe('creating a prospect', () => {
     });
 
     expect(created).toEqual({ id: 'company-2' });
-    expect(api.callsTo('POST /prospects')[0]?.body).toEqual({
+    expect(api.callsTo('POST /distribution/prospects')[0]?.body).toEqual({
       name: 'Globex',
       annualRevenueCents: 100_000_000,
     });
@@ -87,7 +87,7 @@ describe('creating a prospect', () => {
 
 describe('deleting a prospect', () => {
   it('forgets the prospect and makes the list refetch', async () => {
-    fakeApi({ 'DELETE /prospects/company-1': () => noContent() });
+    fakeApi({ 'DELETE /distribution/prospects/company-1': () => noContent() });
     const queryClient = createQueryClient();
     queryClient.setQueryData(queryKeys.prospect('company-1'), prospectDetail());
     queryClient.setQueryData(queryKeys.prospects, []);
@@ -106,7 +106,7 @@ describe('deleting a prospect', () => {
 
 describe('validating a quote', () => {
   it('turns the prospect into a contract everywhere', async () => {
-    fakeApi({ 'POST /quotes/quote-1/validate': () => ok(contract()) });
+    fakeApi({ 'POST /distribution/quotes/quote-1/validate': () => ok(contract()) });
     const queryClient = createQueryClient();
     queryClient.setQueryData(queryKeys.prospect('company-1'), prospectDetail());
     queryClient.setQueryData(queryKeys.prospect('company-2'), prospectDetail());
@@ -128,7 +128,10 @@ describe('validating a quote', () => {
   });
 
   it('keeps the cache as it is when the API refuses', async () => {
-    fakeApi({ 'POST /quotes/quote-1/validate': () => failure(409, 'A signed quote is read-only') });
+    fakeApi({
+      'POST /distribution/quotes/quote-1/validate': () =>
+        failure(409, 'A signed quote is read-only'),
+    });
     const queryClient = createQueryClient();
     queryClient.setQueryData(queryKeys.prospect('company-1'), prospectDetail());
 
@@ -151,7 +154,7 @@ describe('updating a quote', () => {
   };
 
   it('saves the configuration without touching the cache', async () => {
-    const api = fakeApi({ 'PUT /quotes/quote-1': () => ok(draftQuote()) });
+    const api = fakeApi({ 'PUT /distribution/quotes/quote-1': () => ok(draftQuote()) });
     const queryClient = createQueryClient();
     queryClient.setQueryData(queryKeys.prospect('company-1'), prospectDetail());
 
@@ -162,7 +165,7 @@ describe('updating a quote', () => {
       await result.current.save('quote-1', configuration);
     });
 
-    expect(api.callsTo('PUT /quotes/quote-1')[0]?.body).toEqual(configuration);
+    expect(api.callsTo('PUT /distribution/quotes/quote-1')[0]?.body).toEqual(configuration);
     expect(queryClient.getQueryData(queryKeys.prospect('company-1'))).toEqual(prospectDetail());
   });
 

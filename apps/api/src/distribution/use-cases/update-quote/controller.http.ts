@@ -7,7 +7,7 @@ import {
   UpdateQuoteUseCase,
 } from 'src/distribution/use-cases/update-quote/use-case';
 
-@Controller('quotes')
+@Controller('distribution/quotes')
 export class HttpUpdateQuoteController {
   constructor(private readonly useCase: UpdateQuoteUseCase) {}
 

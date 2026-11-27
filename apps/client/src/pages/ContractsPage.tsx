@@ -41,7 +41,9 @@ export function ContractsPage() {
               {visible.map((contract) => (
                 <Tr key={contract.id}>
                   <Td>
-                    <RowLink to={`/contracts/${contract.id}`}>{contract.company.name}</RowLink>
+                    <RowLink to={`/insurance/contracts/${contract.id}`}>
+                      {contract.company.name}
+                    </RowLink>
                   </Td>
                   <Td>
                     <span className="whitespace-nowrap">{formatDate(contract.startDate)}</span>

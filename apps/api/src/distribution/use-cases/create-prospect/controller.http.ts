@@ -6,7 +6,7 @@ import {
   CreateProspectUseCase,
 } from 'src/distribution/use-cases/create-prospect/use-case';
 
-@Controller('prospects')
+@Controller('distribution/prospects')
 export class HttpCreateProspectController {
   constructor(private readonly useCase: CreateProspectUseCase) {}
 

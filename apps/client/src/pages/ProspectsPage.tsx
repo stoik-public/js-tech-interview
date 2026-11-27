@@ -56,7 +56,7 @@ export function ProspectsPage() {
               {visible.map((prospect) => (
                 <Tr key={prospect.id}>
                   <Td>
-                    <RowLink to={`/prospects/${prospect.id}`}>{prospect.name}</RowLink>
+                    <RowLink to={`/insurance/prospects/${prospect.id}`}>{prospect.name}</RowLink>
                   </Td>
                   <Td align="right">
                     {formatCompactMoney(prospect.latestQuote.coverageLimitCents)}

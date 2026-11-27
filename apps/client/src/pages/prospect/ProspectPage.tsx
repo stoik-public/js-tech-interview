@@ -22,14 +22,14 @@ export function ProspectPage() {
   const quote = prospect.data?.quote;
   // The API signs a quote and creates its contract in one transaction, so a signed quote always
   // has its contract and is shown on its own page. A quote shown here is a draft quote.
-  if (quote?.contract) return <Navigate to={`/contracts/${quote.contract.id}`} replace />;
+  if (quote?.contract) return <Navigate to={`/insurance/contracts/${quote.contract.id}`} replace />;
 
   return (
     <>
       <PageHeader
         icon={IconAddressBook}
         breadcrumbs={[
-          { label: 'Prospects', to: '/prospects' },
+          { label: 'Prospects', to: '/insurance/prospects' },
           { label: company?.name ?? 'Prospect' },
         ]}
         status={quote && <Badge tone="blue">Draft</Badge>}

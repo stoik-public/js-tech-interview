@@ -3,20 +3,16 @@ import { Test } from '@nestjs/testing';
 
 import { AppModule } from 'src/app.module';
 import { configureApp } from 'src/app.setup';
-import { PrismaService } from 'src/common/prisma/prisma.service';
+import { Database } from 'src/core/infra/db/database';
 
-/** The whole API on the test database. */
+/** The whole API on the test database, whose tables are emptied after each test. */
 export async function createTestApp() {
   const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
 
   const app = moduleRef.createNestApplication<NestExpressApplication>();
   configureApp(app);
   await app.init();
-  return { app, prisma: app.get(PrismaService) };
-}
-
-export async function resetDatabase(prisma: PrismaService) {
-  await prisma.db.$executeRawUnsafe(`TRUNCATE "contract", "quote", "company" CASCADE`);
+  return { app, db: app.get(Database).db };
 }
 
 export const prospectInput = {
