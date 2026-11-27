@@ -1,7 +1,7 @@
 import { BusinessRuleError } from 'src/core/domain/errors';
 import { ScoringError } from 'src/scoring/domain/error';
 import {
-  type Band,
+  type SecurityLevel,
   SIGNALS,
   type ScoringRules,
   type SecuritySignals,
@@ -25,14 +25,14 @@ export type ScoreBreakdown = {
 
 export type ScoreResult = {
   score: number;
-  band: Band;
+  level: SecurityLevel;
   breakdown: ScoreBreakdown;
 };
 
 /**
  * score = 100 - penalty(phishing click rate) - penalty(leaked passwords) - penalty(unhandled alerts)
  *
- * Each penalty comes from the first tier of its signal whose `upTo` includes the value. The band
+ * Each penalty comes from the first tier of its signal whose `upTo` includes the value. The level
  * is the first one whose `below` is above the score. Pure function: no database, no clock, and the
  * scoring rules are an argument. The lines of the breakdown always add up to the score.
  */
@@ -57,8 +57,8 @@ export function computeSecurityScore(signals: SecuritySignals, rules: ScoringRul
 
   const totalPenalty = lines.reduce((sum, line) => sum + line.penalty, 0);
   const score = 100 - totalPenalty;
-  const band = rules.bands.find((b) => b.below === undefined || score < b.below);
-  if (!band) throw new Error(`The scoring rules have no band for a score of ${score}`);
+  const level = rules.levels.find((b) => b.below === undefined || score < b.below);
+  if (!level) throw new Error(`The scoring rules have no level for a score of ${score}`);
 
-  return { score, band: band.band, breakdown: { lines, totalPenalty } };
+  return { score, level: level.level, breakdown: { lines, totalPenalty } };
 }

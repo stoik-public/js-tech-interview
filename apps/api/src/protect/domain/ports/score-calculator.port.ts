@@ -1,9 +1,9 @@
-import type { Band, SecuritySignals } from 'src/protect/domain/assessment/security-signals';
+import type { SecurityLevel, SecuritySignals } from 'src/protect/domain/report/security-signals';
 
-/** A score out of 100, its band and what explains it. The breakdown is only stored and displayed here. */
-export type AssessmentScore = {
+/** A score out of 100, its level and what explains it. The breakdown is only stored and displayed here. */
+export type SecurityScore = {
   score: number;
-  band: Band;
+  level: SecurityLevel;
   breakdown: Record<string, unknown>;
 };
 
@@ -14,5 +14,5 @@ export type AssessmentScore = {
  */
 export abstract class ScoreCalculator {
   /** Throws a BusinessRuleError when the signals cannot be scored (out of range). */
-  abstract score(signals: SecuritySignals): Promise<AssessmentScore>;
+  abstract score(signals: SecuritySignals): Promise<SecurityScore>;
 }

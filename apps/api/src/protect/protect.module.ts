@@ -1,41 +1,41 @@
 import { Module } from '@nestjs/common';
 
-import { AssessmentRepository } from 'src/protect/domain/ports/assessment-repository.port';
 import { CompanyRepository } from 'src/protect/domain/ports/company-repository.port';
 import { ProtectQueries } from 'src/protect/domain/ports/protect-queries.port';
+import { ReportRepository } from 'src/protect/domain/ports/report-repository.port';
 import { ScoreCalculator } from 'src/protect/domain/ports/score-calculator.port';
-import { DrizzleAssessmentRepository } from 'src/protect/infra/adapters/assessment-repository.drizzle';
 import { DrizzleCompanyRepository } from 'src/protect/infra/adapters/company-repository.drizzle';
 import { DrizzleProtectQueries } from 'src/protect/infra/adapters/protect-queries.drizzle';
+import { DrizzleReportRepository } from 'src/protect/infra/adapters/report-repository.drizzle';
 import { InProcessScoreCalculator } from 'src/protect/infra/adapters/score-calculator.in-process';
 import { HttpGetCompanyController } from 'src/protect/use-cases/get-company/controller.http';
 import { HttpGetReportController } from 'src/protect/use-cases/get-report/controller.http';
 import { HttpListCompaniesController } from 'src/protect/use-cases/list-companies/controller.http';
-import { HttpPublishAssessmentController } from 'src/protect/use-cases/publish-assessment/controller.http';
-import { PublishAssessmentUseCase } from 'src/protect/use-cases/publish-assessment/use-case';
-import { HttpStartAssessmentController } from 'src/protect/use-cases/start-assessment/controller.http';
-import { StartAssessmentUseCase } from 'src/protect/use-cases/start-assessment/use-case';
+import { HttpPublishReportController } from 'src/protect/use-cases/publish-report/controller.http';
+import { PublishReportUseCase } from 'src/protect/use-cases/publish-report/use-case';
+import { HttpStartReportController } from 'src/protect/use-cases/start-report/controller.http';
+import { StartReportUseCase } from 'src/protect/use-cases/start-report/use-case';
 import { HttpUpdateSignalsController } from 'src/protect/use-cases/update-signals/controller.http';
 import { UpdateSignalsUseCase } from 'src/protect/use-cases/update-signals/use-case';
 
-/** Companies, their monthly assessments and the reports they become. */
+/** Companies and their monthly security reports, draft then published. */
 @Module({
   controllers: [
     HttpListCompaniesController,
     HttpGetCompanyController,
-    HttpStartAssessmentController,
+    HttpStartReportController,
     HttpUpdateSignalsController,
-    HttpPublishAssessmentController,
+    HttpPublishReportController,
     HttpGetReportController,
   ],
   providers: [
     { provide: CompanyRepository, useClass: DrizzleCompanyRepository },
-    { provide: AssessmentRepository, useClass: DrizzleAssessmentRepository },
+    { provide: ReportRepository, useClass: DrizzleReportRepository },
     { provide: ProtectQueries, useClass: DrizzleProtectQueries },
     { provide: ScoreCalculator, useClass: InProcessScoreCalculator },
-    StartAssessmentUseCase,
+    StartReportUseCase,
     UpdateSignalsUseCase,
-    PublishAssessmentUseCase,
+    PublishReportUseCase,
   ],
 })
 export class ProtectModule {}

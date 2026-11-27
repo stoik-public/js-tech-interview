@@ -6,7 +6,7 @@ import * as tables from 'src/protect/infra/db/schema';
 
 import { createTestApp } from './helpers';
 
-describe('Protect: assessments and reports (e2e)', () => {
+describe('Protect: draft and published reports (e2e)', () => {
   let app: INestApplication;
   let db: Db;
   let companyId: string;
@@ -16,10 +16,8 @@ describe('Protect: assessments and reports (e2e)', () => {
 
   /** Starts a draft and gives it the signals of Acme Logistics. */
   async function givenADraft(): Promise<string> {
-    const { body } = await api()
-      .post(`/api/protect/companies/${companyId}/assessments`)
-      .expect(201);
-    await api().put(`/api/protect/assessments/${body.id}`).send(acme).expect(200);
+    const { body } = await api().post(`/api/protect/companies/${companyId}/reports`).expect(201);
+    await api().put(`/api/protect/reports/${body.id}`).send(acme).expect(200);
     return body.id;
   }
 
@@ -34,31 +32,29 @@ describe('Protect: assessments and reports (e2e)', () => {
   });
   afterAll(() => app.close());
 
-  it('starts a first assessment with no signals', async () => {
-    const { body } = await api()
-      .post(`/api/protect/companies/${companyId}/assessments`)
-      .expect(201);
+  it('starts a first report with no signals', async () => {
+    const { body } = await api().post(`/api/protect/companies/${companyId}/reports`).expect(201);
 
     expect(body).toMatchObject({
       companyId,
       status: 'draft',
       signals: { phishingClickRatePct: 0, leakedPasswords: 0, unhandledAlerts: 0 },
       score: 100,
-      band: 'Good',
+      level: 'Good',
       publishedAt: null,
     });
-    await api().post(`/api/protect/companies/${companyId}/assessments`).expect(409);
-    await api().post('/api/protect/companies/unknown/assessments').expect(404);
+    await api().post(`/api/protect/companies/${companyId}/reports`).expect(409);
+    await api().post('/api/protect/companies/unknown/reports').expect(404);
   });
 
   it('re-scores a draft when its signals change, with a breakdown that adds up', async () => {
     const { body: draft } = await api()
-      .post(`/api/protect/companies/${companyId}/assessments`)
+      .post(`/api/protect/companies/${companyId}/reports`)
       .expect(201);
 
-    const { body } = await api().put(`/api/protect/assessments/${draft.id}`).send(acme).expect(200);
+    const { body } = await api().put(`/api/protect/reports/${draft.id}`).send(acme).expect(200);
 
-    expect(body).toMatchObject({ signals: acme, score: 55, band: 'Weak' });
+    expect(body).toMatchObject({ signals: acme, score: 55, level: 'Weak' });
     expect(body.scoreBreakdown).toEqual({
       lines: [
         { signal: 'phishingClickRatePct', value: 18, tierUpTo: 30, penalty: 20 },
@@ -68,73 +64,71 @@ describe('Protect: assessments and reports (e2e)', () => {
       totalPenalty: 45,
     });
     const { body: detail } = await api().get(`/api/protect/companies/${companyId}`).expect(200);
-    expect(detail.draft).toMatchObject({ id: draft.id, score: 55, band: 'Weak' });
+    expect(detail.draft).toMatchObject({ id: draft.id, score: 55, level: 'Weak' });
   });
 
   it('rejects signals out of range', async () => {
-    const assessmentId = await givenADraft();
+    const reportId = await givenADraft();
 
     await api()
-      .put(`/api/protect/assessments/${assessmentId}`)
+      .put(`/api/protect/reports/${reportId}`)
       .send({ ...acme, phishingClickRatePct: 101 })
       .expect(400);
     await api()
-      .put(`/api/protect/assessments/${assessmentId}`)
+      .put(`/api/protect/reports/${reportId}`)
       .send({ ...acme, leakedPasswords: -1 })
       .expect(400);
   });
 
   it('publishes a draft as a report, which is never re-scored', async () => {
-    const assessmentId = await givenADraft();
+    const reportId = await givenADraft();
 
     const { body: report } = await api()
-      .post(`/api/protect/assessments/${assessmentId}/publish`)
+      .post(`/api/protect/reports/${reportId}/publish`)
       .expect(201);
-    expect(report).toMatchObject({ status: 'published', score: 55, band: 'Weak' });
+    expect(report).toMatchObject({ status: 'published', score: 55, level: 'Weak' });
     expect(report.publishedAt).toEqual(expect.any(String));
 
     const { body } = await api()
-      .put(`/api/protect/assessments/${assessmentId}`)
+      .put(`/api/protect/reports/${reportId}`)
       .send({ phishingClickRatePct: 0, leakedPasswords: 0, unhandledAlerts: 0 })
       .expect(409);
-    expect(body.code).toBe('protect.assessment.published');
-    await api().post(`/api/protect/assessments/${assessmentId}/publish`).expect(409);
+    expect(body.code).toBe('protect.report.published');
+    await api().post(`/api/protect/reports/${reportId}/publish`).expect(409);
 
-    const { body: read } = await api().get(`/api/protect/reports/${assessmentId}`).expect(200);
+    const { body: read } = await api().get(`/api/protect/reports/${reportId}`).expect(200);
     expect(read).toMatchObject({
       score: 55,
-      band: 'Weak',
+      level: 'Weak',
       signals: acme,
       company: { id: companyId, name: 'Acme Logistics' },
     });
   });
 
   it('starts the next draft from the signals of the latest report', async () => {
-    const assessmentId = await givenADraft();
-    await api().post(`/api/protect/assessments/${assessmentId}/publish`).expect(201);
+    const reportId = await givenADraft();
+    await api().post(`/api/protect/reports/${reportId}/publish`).expect(201);
 
-    const { body } = await api()
-      .post(`/api/protect/companies/${companyId}/assessments`)
-      .expect(201);
+    const { body } = await api().post(`/api/protect/companies/${companyId}/reports`).expect(201);
 
     expect(body).toMatchObject({ status: 'draft', signals: acme, score: 55 });
   });
 
   it('shows a draft as a report only once published', async () => {
-    const assessmentId = await givenADraft();
+    const reportId = await givenADraft();
 
-    await api().get(`/api/protect/reports/${assessmentId}`).expect(404);
+    await api().get(`/api/protect/reports/${reportId}`).expect(404);
     await api().get('/api/protect/reports/unknown').expect(404);
   });
 
   it('lists the companies with their latest report and their draft', async () => {
     const first = await givenADraft();
-    await api().post(`/api/protect/assessments/${first}/publish`).expect(201);
+    await api().post(`/api/protect/reports/${first}/publish`).expect(201);
     const { body: second } = await api()
-      .post(`/api/protect/companies/${companyId}/assessments`)
+      .post(`/api/protect/companies/${companyId}/reports`)
       .expect(201);
     await api()
-      .put(`/api/protect/assessments/${second.id}`)
+      .put(`/api/protect/reports/${second.id}`)
       .send({ ...acme, leakedPasswords: 0 })
       .expect(200);
     await db.insert(tables.company).values({ name: 'Zeta Corp' });
@@ -145,8 +139,8 @@ describe('Protect: assessments and reports (e2e)', () => {
       expect.objectContaining({
         id: companyId,
         name: 'Acme Logistics',
-        latestReport: expect.objectContaining({ id: first, score: 55, band: 'Weak' }),
-        draft: { id: second.id, score: 75, band: 'Good' },
+        latestReport: expect.objectContaining({ id: first, score: 55, level: 'Weak' }),
+        draft: { id: second.id, score: 75, level: 'Good' },
       }),
       expect.objectContaining({ name: 'Zeta Corp', latestReport: null, draft: null }),
     ]);
@@ -154,11 +148,11 @@ describe('Protect: assessments and reports (e2e)', () => {
 
   it('gives the reports of a company, newest first', async () => {
     const first = await givenADraft();
-    await api().post(`/api/protect/assessments/${first}/publish`).expect(201);
+    await api().post(`/api/protect/reports/${first}/publish`).expect(201);
     const { body: second } = await api()
-      .post(`/api/protect/companies/${companyId}/assessments`)
+      .post(`/api/protect/companies/${companyId}/reports`)
       .expect(201);
-    await api().post(`/api/protect/assessments/${second.id}/publish`).expect(201);
+    await api().post(`/api/protect/reports/${second.id}/publish`).expect(201);
 
     const { body } = await api().get(`/api/protect/companies/${companyId}`).expect(200);
 
@@ -167,9 +161,9 @@ describe('Protect: assessments and reports (e2e)', () => {
     await api().get('/api/protect/companies/unknown').expect(404);
   });
 
-  it('gives the band legend of the scoring rules in force', async () => {
+  it('gives the security level legend of the scoring rules in force', async () => {
     const { body } = await api().get('/api/scoring/scale').expect(200);
 
-    expect(body.bands.map((band: { band: string }) => band.band)).toEqual(['Weak', 'Good']);
+    expect(body.levels.map((level: { level: string }) => level.level)).toEqual(['Weak', 'Good']);
   });
 });

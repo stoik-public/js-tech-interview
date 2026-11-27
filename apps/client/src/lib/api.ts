@@ -1,5 +1,5 @@
 import type {
-  Assessment,
+  Report,
   Contract,
   ContractDetail,
   ContractListItem,
@@ -71,12 +71,11 @@ export const api = {
   protectCompanies: () => request<ProtectCompanyListItem[]>('GET', '/protect/companies'),
   protectCompany: (companyId: string) =>
     request<ProtectCompanyDetail>('GET', `/protect/companies/${companyId}`),
-  startAssessment: (companyId: string) =>
-    request<Assessment>('POST', `/protect/companies/${companyId}/assessments`),
-  updateSignals: (assessmentId: string, signals: SecuritySignals) =>
-    request<Assessment>('PUT', `/protect/assessments/${assessmentId}`, signals),
-  publishAssessment: (assessmentId: string) =>
-    request<Assessment>('POST', `/protect/assessments/${assessmentId}/publish`),
-  report: (assessmentId: string) =>
-    request<ReportDetail>('GET', `/protect/reports/${assessmentId}`),
+  startReport: (companyId: string) =>
+    request<Report>('POST', `/protect/companies/${companyId}/reports`),
+  updateSignals: (reportId: string, signals: SecuritySignals) =>
+    request<Report>('PUT', `/protect/reports/${reportId}`, signals),
+  publishReport: (reportId: string) =>
+    request<Report>('POST', `/protect/reports/${reportId}/publish`),
+  report: (reportId: string) => request<ReportDetail>('GET', `/protect/reports/${reportId}`),
 };

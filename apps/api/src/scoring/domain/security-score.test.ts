@@ -16,11 +16,11 @@ describe('computeSecurityScore', () => {
   it('scores Acme Logistics 55, Weak', () => {
     const acme = { phishingClickRatePct: 18, leakedPasswords: 3, unhandledAlerts: 2 };
 
-    expect(score(acme)).toMatchObject({ score: 55, band: 'Weak' });
+    expect(score(acme)).toMatchObject({ score: 55, level: 'Weak' });
   });
 
   it('scores 100, Good, when no signal costs anything', () => {
-    expect(score(clean)).toMatchObject({ score: 100, band: 'Good' });
+    expect(score(clean)).toMatchObject({ score: 100, level: 'Good' });
   });
 
   it('scores with the rules it is given', () => {
@@ -30,10 +30,10 @@ describe('computeSecurityScore', () => {
         leakedPasswords: [{ upTo: null, penalty: 2 }],
         unhandledAlerts: [{ upTo: null, penalty: 3 }],
       },
-      bands: [{ band: 'Critical', below: 95 }, { band: 'Good' }],
+      levels: [{ level: 'Critical', below: 95 }, { level: 'Good' }],
     };
 
-    expect(computeSecurityScore(clean, rules)).toMatchObject({ score: 94, band: 'Critical' });
+    expect(computeSecurityScore(clean, rules)).toMatchObject({ score: 94, level: 'Critical' });
   });
 
   it('returns a breakdown with the inputs, the tiers and the penalties', () => {
@@ -92,17 +92,17 @@ describe('computeSecurityScore', () => {
     });
   });
 
-  describe('bands', () => {
+  describe('levels', () => {
     it('is Weak below 70, Good from 70', () => {
-      expect(score({ ...clean, phishingClickRatePct: 31 }).band).toBe('Good'); // 70
-      expect(score({ ...clean, phishingClickRatePct: 31, unhandledAlerts: 1 }).band).toBe('Weak'); // 65
+      expect(score({ ...clean, phishingClickRatePct: 31 }).level).toBe('Good'); // 70
+      expect(score({ ...clean, phishingClickRatePct: 31, unhandledAlerts: 1 }).level).toBe('Weak'); // 65
     });
 
     it('never goes below 0: the worst signals cost less than 100 points', () => {
       const worst = score({ phishingClickRatePct: 100, leakedPasswords: 99, unhandledAlerts: 99 });
 
       expect(worst.score).toBe(15);
-      expect(worst.band).toBe('Weak');
+      expect(worst.level).toBe('Weak');
     });
   });
 });

@@ -4,9 +4,9 @@ import { computeSecurityScore, type ScoreResult } from 'src/scoring/domain/secur
 
 // The only place that decides which scoring rules are in force.
 
-/** The security score of an assessment's signals under the scoring rules in force. */
-export const scoreAssessment = (signals: SecuritySignals): ScoreResult =>
+/** The security score of a report's signals under the scoring rules in force. */
+export const scoreSignals = (signals: SecuritySignals): ScoreResult =>
   computeSecurityScore(signals, SCORING_RULES);
 
-/** The band legend under the scoring rules in force. */
+/** The security level legend under the scoring rules in force. */
 export const scoreScale = (): ScoreScale => scaleOf(SCORING_RULES);

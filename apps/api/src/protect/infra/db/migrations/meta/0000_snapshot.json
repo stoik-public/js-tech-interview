@@ -1,146 +1,9 @@
 {
-  "id": "6ab5942c-af6c-42f4-ab54-5dfa79ec7603",
+  "id": "cf74a2b3-1e34-49ff-9d83-0080acef329e",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
-    "protect.assessment": {
-      "name": "assessment",
-      "schema": "protect",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "companyId": {
-          "name": "companyId",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "status": {
-          "name": "status",
-          "type": "AssessmentStatus",
-          "typeSchema": "protect",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'draft'"
-        },
-        "phishingClickRatePct": {
-          "name": "phishingClickRatePct",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "leakedPasswords": {
-          "name": "leakedPasswords",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "unhandledAlerts": {
-          "name": "unhandledAlerts",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "score": {
-          "name": "score",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "band": {
-          "name": "band",
-          "type": "Band",
-          "typeSchema": "protect",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "scoreBreakdown": {
-          "name": "scoreBreakdown",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "publishedAt": {
-          "name": "publishedAt",
-          "type": "timestamp (3)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "createdAt": {
-          "name": "createdAt",
-          "type": "timestamp (3)",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updatedAt": {
-          "name": "updatedAt",
-          "type": "timestamp (3)",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "assessment_companyId_idx": {
-          "name": "assessment_companyId_idx",
-          "columns": [
-            {
-              "expression": "companyId",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "assessment_one_draft_per_company_key": {
-          "name": "assessment_one_draft_per_company_key",
-          "columns": [
-            {
-              "expression": "companyId",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "where": "\"protect\".\"assessment\".\"status\" = 'draft'",
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "assessment_companyId_company_id_fk": {
-          "name": "assessment_companyId_company_id_fk",
-          "tableFrom": "assessment",
-          "tableTo": "company",
-          "schemaTo": "protect",
-          "columnsFrom": [
-            "companyId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "cascade"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
     "protect.company": {
       "name": "company",
       "schema": "protect",
@@ -179,24 +42,161 @@
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
+    },
+    "protect.report": {
+      "name": "report",
+      "schema": "protect",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "companyId": {
+          "name": "companyId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "ReportStatus",
+          "typeSchema": "protect",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'draft'"
+        },
+        "phishingClickRatePct": {
+          "name": "phishingClickRatePct",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "leakedPasswords": {
+          "name": "leakedPasswords",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "unhandledAlerts": {
+          "name": "unhandledAlerts",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "score": {
+          "name": "score",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "level": {
+          "name": "level",
+          "type": "SecurityLevel",
+          "typeSchema": "protect",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "scoreBreakdown": {
+          "name": "scoreBreakdown",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "publishedAt": {
+          "name": "publishedAt",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "report_companyId_idx": {
+          "name": "report_companyId_idx",
+          "columns": [
+            {
+              "expression": "companyId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "report_one_draft_per_company_key": {
+          "name": "report_one_draft_per_company_key",
+          "columns": [
+            {
+              "expression": "companyId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"protect\".\"report\".\"status\" = 'draft'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "report_companyId_company_id_fk": {
+          "name": "report_companyId_company_id_fk",
+          "tableFrom": "report",
+          "tableTo": "company",
+          "schemaTo": "protect",
+          "columnsFrom": [
+            "companyId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
     }
   },
   "enums": {
-    "protect.AssessmentStatus": {
-      "name": "AssessmentStatus",
-      "schema": "protect",
-      "values": [
-        "draft",
-        "published"
-      ]
-    },
-    "protect.Band": {
-      "name": "Band",
+    "protect.SecurityLevel": {
+      "name": "SecurityLevel",
       "schema": "protect",
       "values": [
         "Critical",
         "Weak",
         "Good"
+      ]
+    },
+    "protect.ReportStatus": {
+      "name": "ReportStatus",
+      "schema": "protect",
+      "values": [
+        "draft",
+        "published"
       ]
     }
   },

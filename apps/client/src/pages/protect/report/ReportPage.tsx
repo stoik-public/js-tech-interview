@@ -8,12 +8,12 @@ import { useReport } from '../../../lib/server-state';
 import type { ReportDetail } from '../../../lib/types';
 import { ErrorAlert } from '../../../ui/Alert';
 import { Skeleton } from '../../../ui/Skeleton';
-import { BandBadge, formatMonth, ScoreLines } from '../score';
+import { LevelBadge, formatMonth, ScoreLines } from '../score';
 
 /** A monthly report as the client received it: read-only. */
 export function ReportPage() {
-  const { assessmentId = '' } = useParams();
-  const report = useReport(assessmentId);
+  const { reportId = '' } = useParams();
+  const report = useReport(reportId);
   const company = report.data?.company;
 
   return (
@@ -46,7 +46,7 @@ function ReportRecord({ report }: { report: ReportDetail }) {
       <div className="bg-gray-0 mt-6 flex items-center gap-3 rounded-md px-4 py-3">
         <span className="text-gray-7 text-xs">Security score</span>
         <span className="text-lg font-medium tabular-nums">{report.score}</span>
-        <BandBadge band={report.band} />
+        <LevelBadge level={report.level} />
       </div>
 
       <section className="mt-8">

@@ -2,25 +2,25 @@ import { Link } from 'react-router';
 
 import type { ReportSummary, ScoreScale } from '../../lib/types';
 import { Tooltip } from '../../ui/Tooltip';
-import { BAND_FILLS, formatMonth } from './score';
+import { LEVEL_FILLS, formatMonth } from './score';
 
 const MONTHS = 12;
 
 /**
- * The scores of the latest 12 reports, oldest first, one bar per month. The band limits are drawn
- * and labeled, each bar says its band on hover, and the reports table lists the same numbers.
+ * The scores of the latest 12 reports, oldest first, one bar per month. The level limits are drawn
+ * and labeled, each bar says its level on hover, and the reports table lists the same numbers.
  */
 export function ScoreHistory({ reports, scale }: { reports: ReportSummary[]; scale?: ScoreScale }) {
   const months = reports.slice(0, MONTHS).reverse();
-  const limits = scale?.bands.slice(1).map(({ band, minScore }) => ({ band, minScore })) ?? [];
+  const limits = scale?.levels.slice(1).map(({ level, minScore }) => ({ level, minScore })) ?? [];
   const latest = months.at(-1);
 
   return (
     <figure aria-label="Security score, last 12 reports">
       <div className="relative h-48 pl-8">
-        {limits.map(({ band, minScore }) => (
+        {limits.map(({ level, minScore }) => (
           <div
-            key={band}
+            key={level}
             aria-hidden
             className="border-gray-3 absolute right-0 left-8 border-t border-dashed"
             style={{ bottom: `${minScore}%` }}
@@ -29,7 +29,7 @@ export function ScoreHistory({ reports, scale }: { reports: ReportSummary[]; sca
               {minScore}
             </span>
             <span className="text-gray-6 absolute right-0 bottom-0.5 text-[11px]">
-              {band} from here
+              {level} from here
             </span>
           </div>
         ))}
@@ -38,11 +38,11 @@ export function ScoreHistory({ reports, scale }: { reports: ReportSummary[]; sca
           {months.map((report) => (
             <li key={report.id} className="flex h-full flex-1 flex-col justify-end">
               <Tooltip
-                content={`${formatMonth(report.publishedAt)}: ${report.score}, ${report.band}`}
+                content={`${formatMonth(report.publishedAt)}: ${report.score}, ${report.level}`}
               >
                 <Link
                   to={`/protect/reports/${report.id}`}
-                  aria-label={`${formatMonth(report.publishedAt)}: ${report.score}, ${report.band}`}
+                  aria-label={`${formatMonth(report.publishedAt)}: ${report.score}, ${report.level}`}
                   className="group flex h-full flex-col justify-end"
                 >
                   {report === latest && (
@@ -51,7 +51,7 @@ export function ScoreHistory({ reports, scale }: { reports: ReportSummary[]; sca
                     </span>
                   )}
                   <span
-                    className={`block rounded-t-[4px] transition-opacity group-hover:opacity-80 ${BAND_FILLS[report.band]}`}
+                    className={`block rounded-t-[4px] transition-opacity group-hover:opacity-80 ${LEVEL_FILLS[report.level]}`}
                     style={{ height: `${report.score}%` }}
                   />
                 </Link>
@@ -74,15 +74,15 @@ export function ScoreHistory({ reports, scale }: { reports: ReportSummary[]; sca
   );
 }
 
-/** What each band means, from the scoring rules in force. */
-export function BandLegend({ scale }: { scale: ScoreScale }) {
+/** What each level means, from the scoring rules in force. */
+export function LevelLegend({ scale }: { scale: ScoreScale }) {
   return (
-    <ul aria-label="Bands" className="flex flex-wrap gap-x-4 gap-y-1 text-xs">
-      {[...scale.bands].reverse().map(({ band, minScore, maxScore }) => (
-        <li key={band} className="flex items-center gap-1.5">
-          <span aria-hidden className={`size-2.5 rounded-[2px] ${BAND_FILLS[band]}`} />
+    <ul aria-label="Security levels" className="flex flex-wrap gap-x-4 gap-y-1 text-xs">
+      {[...scale.levels].reverse().map(({ level, minScore, maxScore }) => (
+        <li key={level} className="flex items-center gap-1.5">
+          <span aria-hidden className={`size-2.5 rounded-[2px] ${LEVEL_FILLS[level]}`} />
           <span>
-            {band}{' '}
+            {level}{' '}
             <span className="text-gray-6 tabular-nums">
               {minScore}–{maxScore}
             </span>

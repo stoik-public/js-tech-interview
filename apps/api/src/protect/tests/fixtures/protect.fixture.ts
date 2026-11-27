@@ -1,13 +1,13 @@
 import { StubClock } from 'src/core/infra/adapters/clock.stub';
-import { Assessment } from 'src/protect/domain/assessment/assessment';
-import { ScoredSignals } from 'src/protect/domain/assessment/scored-signals';
-import type { SecuritySignals } from 'src/protect/domain/assessment/security-signals';
 import { Company } from 'src/protect/domain/company/company';
-import { InMemoryAssessmentRepository } from 'src/protect/infra/adapters/assessment-repository.in-memory';
+import { Report } from 'src/protect/domain/report/report';
+import { ScoredSignals } from 'src/protect/domain/report/scored-signals';
+import type { SecuritySignals } from 'src/protect/domain/report/security-signals';
 import { InMemoryCompanyRepository } from 'src/protect/infra/adapters/company-repository.in-memory';
+import { InMemoryReportRepository } from 'src/protect/infra/adapters/report-repository.in-memory';
 import { StubScoreCalculator } from 'src/protect/infra/adapters/score-calculator.stub';
-import { PublishAssessmentUseCase } from 'src/protect/use-cases/publish-assessment/use-case';
-import { StartAssessmentUseCase } from 'src/protect/use-cases/start-assessment/use-case';
+import { PublishReportUseCase } from 'src/protect/use-cases/publish-report/use-case';
+import { StartReportUseCase } from 'src/protect/use-cases/start-report/use-case';
 import { UpdateSignalsUseCase } from 'src/protect/use-cases/update-signals/use-case';
 
 import { ACME_SIGNALS } from '../builders';
@@ -16,21 +16,17 @@ import { ACME_SIGNALS } from '../builders';
 export class ProtectFixture {
   readonly clock = new StubClock(new Date('2026-03-15T10:00:00Z'));
   readonly companies = new InMemoryCompanyRepository();
-  readonly assessments = new InMemoryAssessmentRepository();
+  readonly reports = new InMemoryReportRepository();
   private readonly scoreCalculator = new StubScoreCalculator();
 
-  readonly startAssessment = new StartAssessmentUseCase(
+  readonly startReport = new StartReportUseCase(
     this.companies,
-    this.assessments,
+    this.reports,
     this.scoreCalculator,
     this.clock,
   );
-  readonly updateSignals = new UpdateSignalsUseCase(
-    this.assessments,
-    this.scoreCalculator,
-    this.clock,
-  );
-  readonly publishAssessment = new PublishAssessmentUseCase(this.assessments, this.clock);
+  readonly updateSignals = new UpdateSignalsUseCase(this.reports, this.scoreCalculator, this.clock);
+  readonly publishReport = new PublishReportUseCase(this.reports, this.clock);
 
   async givenACompany(): Promise<string> {
     const company = Company.create({ name: 'Acme Logistics' }, this.clock.now());
@@ -38,18 +34,18 @@ export class ProtectFixture {
     return company.id;
   }
 
-  /** A company with a draft assessment of `signals`. */
-  async givenADraftAssessment(signals: SecuritySignals = ACME_SIGNALS) {
+  /** A company with a draft report of `signals`. */
+  async givenADraftReport(signals: SecuritySignals = ACME_SIGNALS) {
     const companyId = await this.givenACompany();
     const scored = await ScoredSignals.score(this.scoreCalculator, signals);
-    const draft = Assessment.start({ companyId, scored }, this.clock.now());
-    await this.assessments.save(draft);
-    return { companyId, assessmentId: draft.id };
+    const draft = Report.start({ companyId, scored }, this.clock.now());
+    await this.reports.save(draft);
+    return { companyId, reportId: draft.id };
   }
 
-  assessment(assessmentId: string) {
-    const props = this.assessments.snapshots.get(assessmentId);
-    if (!props) throw new Error(`No assessment ${assessmentId}`);
+  report(reportId: string) {
+    const props = this.reports.snapshots.get(reportId);
+    if (!props) throw new Error(`No report ${reportId}`);
     return props;
   }
 }

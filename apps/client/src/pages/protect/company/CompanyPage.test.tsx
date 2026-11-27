@@ -4,7 +4,7 @@ import { Route, Routes } from 'react-router';
 import { describe, expect, it } from 'vitest';
 
 import { fakeApi, ok, type Reply } from '../../../test/fake-api';
-import { companyDetail, draftAssessment, report, scale } from '../../../test/protect-fixtures';
+import { companyDetail, draftReport, report, scale } from '../../../test/protect-fixtures';
 import { createQueryClient, pageWrapper } from '../../../test/providers';
 import { CompanyPage } from './CompanyPage';
 
@@ -21,7 +21,7 @@ function renderCompanyPage() {
 const scoreCard = () => screen.getByRole('complementary', { name: 'Score' });
 const publishButton = () => within(scoreCard()).getByRole('button', { name: 'Publish report' });
 
-describe('a company with a draft assessment', () => {
+describe('a company with a draft report', () => {
   it('shows the score of the draft, line by line, and the reports', async () => {
     fakeApi({
       'GET /scoring/scale': () => ok(scale()),
@@ -43,7 +43,7 @@ describe('a company with a draft assessment', () => {
     const api = fakeApi({
       'GET /scoring/scale': () => ok(scale()),
       'GET /protect/companies/company-1': () => ok(companyDetail()),
-      'PUT /protect/assessments/assessment-1': () => saving,
+      'PUT /protect/reports/report-1': () => saving,
     });
     const { user } = renderCompanyPage();
     const leaked = await screen.findByRole('textbox', { name: 'Leaked passwords' });
@@ -54,13 +54,11 @@ describe('a company with a draft assessment', () => {
     await user.click(publishButton());
     expect(screen.queryByRole('dialog')).toBeNull();
 
-    release(
-      ok(draftAssessment({ score: 75, band: 'Good', updatedAt: '2026-11-21T10:00:00.000Z' })),
-    );
+    release(ok(draftReport({ score: 75, level: 'Good', updatedAt: '2026-11-21T10:00:00.000Z' })));
 
     await waitFor(() => expect(publishButton().getAttribute('aria-disabled')).toBe('false'));
     expect(within(scoreCard()).getByText('75', { selector: 'p > span' })).toBeDefined();
-    expect(api.callsTo('PUT /protect/assessments/assessment-1').at(-1)?.body).toEqual({
+    expect(api.callsTo('PUT /protect/reports/report-1').at(-1)?.body).toEqual({
       phishingClickRatePct: 18,
       leakedPasswords: 0,
       unhandledAlerts: 2,
@@ -81,7 +79,7 @@ describe('a company with a draft assessment', () => {
 
     expect(await screen.findByText('Enter a percentage up to 100')).toBeDefined();
     expect(publishButton().getAttribute('aria-disabled')).toBe('true');
-    expect(api.callsTo('PUT /protect/assessments/assessment-1')).toHaveLength(0);
+    expect(api.callsTo('PUT /protect/reports/report-1')).toHaveLength(0);
   });
 
   it('is published after confirmation, which turns it into a report', async () => {
@@ -93,15 +91,13 @@ describe('a company with a draft assessment', () => {
           published
             ? companyDetail({
                 draft: null,
-                reports: [report({ id: 'assessment-1', score: 55 }), report()],
+                reports: [report({ id: 'report-1', score: 55 }), report()],
               })
             : companyDetail(),
         ),
-      'POST /protect/assessments/assessment-1/publish': () => {
+      'POST /protect/reports/report-1/publish': () => {
         published = true;
-        return ok(
-          draftAssessment({ status: 'published', publishedAt: '2026-11-25T10:00:00.000Z' }),
-        );
+        return ok(draftReport({ status: 'published', publishedAt: '2026-11-25T10:00:00.000Z' }));
       },
     });
     const { user } = renderCompanyPage();
@@ -109,11 +105,11 @@ describe('a company with a draft assessment', () => {
 
     await user.click(publishButton());
     const dialog = screen.getByRole('dialog', { name: 'Publish this report?' });
-    expect(api.callsTo('POST /protect/assessments/assessment-1/publish')).toHaveLength(0);
+    expect(api.callsTo('POST /protect/reports/report-1/publish')).toHaveLength(0);
     await user.click(within(dialog).getByRole('button', { name: 'Publish report' }));
 
     expect(await screen.findByText('Report published')).toBeDefined();
     await waitFor(() => expect(screen.queryByText('Draft')).toBeNull());
-    expect(screen.getByRole('button', { name: 'Start assessment' })).toBeDefined();
+    expect(screen.getByRole('button', { name: 'Start report' })).toBeDefined();
   });
 });

@@ -3,12 +3,12 @@ import { index, integer, jsonb, pgSchema, text, timestamp, uniqueIndex } from 'd
 import { randomUUID } from 'node:crypto';
 
 // Relative: drizzle-kit loads this file without the `src/*` path alias.
-import { BANDS } from '../../domain/assessment/security-signals';
+import { SECURITY_LEVELS } from '../../domain/report/security-signals';
 
 export const protect = pgSchema('protect');
 
-export const assessmentStatus = protect.enum('AssessmentStatus', ['draft', 'published']);
-export const band = protect.enum('Band', BANDS);
+export const reportStatus = protect.enum('ReportStatus', ['draft', 'published']);
+export const level = protect.enum('SecurityLevel', SECURITY_LEVELS);
 
 const id = () =>
   text()
@@ -30,32 +30,32 @@ export const company = protect.table('company', {
   ...timestamps,
 });
 
-export const assessment = protect.table(
-  'assessment',
+export const report = protect.table(
+  'report',
   {
     id: id(),
     companyId: text()
       .notNull()
       .references(() => company.id, { onDelete: 'cascade', onUpdate: 'cascade' }),
-    status: assessmentStatus().notNull().default('draft'),
+    status: reportStatus().notNull().default('draft'),
     phishingClickRatePct: integer().notNull(),
     leakedPasswords: integer().notNull(),
     unhandledAlerts: integer().notNull(),
     score: integer().notNull(),
-    band: band().notNull(),
+    level: level().notNull(),
     /** Output of the scoring context: one line per signal, with its value, tier and penalty. */
     scoreBreakdown: jsonb().$type<Record<string, unknown>>().notNull(),
     publishedAt: timestamp({ precision: 3 }),
     ...timestamps,
   },
   (table) => [
-    index('assessment_companyId_idx').on(table.companyId),
-    // A company has one assessment in progress at most.
-    uniqueIndex('assessment_one_draft_per_company_key')
+    index('report_companyId_idx').on(table.companyId),
+    // A company has one report in progress at most.
+    uniqueIndex('report_one_draft_per_company_key')
       .on(table.companyId)
       .where(sql`${table.status} = 'draft'`),
   ],
 );
 
 export type CompanyRow = typeof company.$inferSelect;
-export type AssessmentRow = typeof assessment.$inferSelect;
+export type ReportRow = typeof report.$inferSelect;

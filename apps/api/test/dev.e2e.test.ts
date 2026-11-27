@@ -80,10 +80,10 @@ describe('Developer routes (e2e)', () => {
     const { body: model } = await api().get('/api/dev/data-model/protect').expect(200);
     expect(model.tables.map((table: { id: string }) => table.id)).toEqual([
       'protect.company',
-      'protect.assessment',
+      'protect.report',
     ]);
     expect(model.enums).toContainEqual(
-      expect.objectContaining({ name: 'Band', values: ['Critical', 'Weak', 'Good'] }),
+      expect.objectContaining({ name: 'SecurityLevel', values: ['Critical', 'Weak', 'Good'] }),
     );
 
     const { body: routes } = await api().get('/api/dev/routes?test=protect').expect(200);

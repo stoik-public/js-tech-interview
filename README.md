@@ -42,8 +42,8 @@ The terms are defined in [GLOSSARY.md](apps/api/src/distribution/GLOSSARY.md).
 
 The repository hosts a second test, Protect: pick it in the sidebar's **Test** dropdown, or open `/protect`.
 
-1. Each **company** has a **draft assessment** with three **signals**: the phishing click rate, the leaked passwords and the unhandled alerts. Every change is saved, and the API recomputes the **security score** and its **band**.
-2. **Publishing** a draft assessment freezes it as the month's **report**, sent to the client.
+1. Each **company** has a **draft report** with three **signals**: the phishing click rate, the leaked passwords and the unhandled alerts. Every change is saved, and the API recomputes the **security score** and its **level**.
+2. **Publishing** a draft report makes it the month's **published report**, sent to the client.
 3. The company page charts the last 12 reports, each with a read-only page, and starts the next month's draft.
 
 The terms are defined in [GLOSSARY.md](apps/api/src/protect/GLOSSARY.md).
@@ -60,7 +60,7 @@ The API has four bounded contexts, two per test, on top of a small shared kernel
 - `pricing`: the pricing rules and the premium formula, a pure function (`computePremium`).
 - `distribution`: companies, quotes and contracts.
 - `scoring`: the scoring rules and the security score formula, a pure function (`computeSecurityScore`).
-- `protect`: companies, assessments and reports.
+- `protect`: companies and their security reports.
 
 Each context has a `domain/` (entities, rules, ports), `use-cases/` (one folder per action) and `infra/` (adapters, and the tables it owns). A context only reaches another through its `public-api.ts`, and `pnpm lint` checks it. Each context owns its routes (`/api/distribution/…`, `/api/pricing/…`, `/api/protect/…`, `/api/scoring/…`) and its Postgres schema. Conventions are in [apps/api/AGENTS.md](apps/api/AGENTS.md).
 

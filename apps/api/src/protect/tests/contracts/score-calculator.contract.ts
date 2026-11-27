@@ -1,6 +1,6 @@
 import { BusinessRuleError } from 'src/core/domain/errors';
-import { BANDS, NO_SIGNALS } from 'src/protect/domain/assessment/security-signals';
 import type { ScoreCalculator } from 'src/protect/domain/ports/score-calculator.port';
+import { SECURITY_LEVELS, NO_SIGNALS } from 'src/protect/domain/report/security-signals';
 
 import { ACME_SIGNALS } from '../builders';
 
@@ -10,19 +10,19 @@ import { ACME_SIGNALS } from '../builders';
  */
 export function describeScoreCalculator(name: string, calculator: () => ScoreCalculator) {
   describe(`ScoreCalculator: ${name}`, () => {
-    it('scores signals as a whole number from 0 to 100, with a band', async () => {
-      const { score, band } = await calculator().score(ACME_SIGNALS);
+    it('scores signals as a whole number from 0 to 100, with a level', async () => {
+      const { score, level } = await calculator().score(ACME_SIGNALS);
 
       expect(Number.isInteger(score)).toBe(true);
       expect(score).toBeGreaterThanOrEqual(0);
       expect(score).toBeLessThanOrEqual(100);
-      expect(BANDS).toContain(band);
+      expect(SECURITY_LEVELS).toContain(level);
     });
 
     it('scores 100, Good, when nothing went wrong', async () => {
       await expect(calculator().score(NO_SIGNALS)).resolves.toMatchObject({
         score: 100,
-        band: 'Good',
+        level: 'Good',
       });
     });
 

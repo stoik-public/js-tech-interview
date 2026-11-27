@@ -4,10 +4,10 @@ import type { Signal } from '../../../lib/types';
 import { Card } from '../../../ui/Card';
 import { TextInput } from '../../../ui/TextInput';
 import { SIGNAL_DESCRIPTIONS, SIGNAL_LABELS, SIGNALS } from '../score';
-import type { AssessmentSession } from './useLiveAssessment';
+import type { ReportSession } from './useLiveReport';
 
-/** Every valid change is saved and re-scored by the API (see useLiveAssessment). */
-export function SignalsForm({ session }: { session: AssessmentSession }) {
+/** Every valid change is saved and re-scored by the API (see useLiveReport). */
+export function SignalsForm({ session }: { session: ReportSession }) {
   // An error shows once the field was left, not while the broker is typing.
   const [touched, setTouched] = useState<Set<Signal>>(new Set());
 

@@ -9,9 +9,9 @@ import { EmptyState } from '../../ui/EmptyState';
 import { SearchInput } from '../../ui/SearchInput';
 import { TableSkeleton } from '../../ui/Skeleton';
 import { RowLink, Table, Td, Th, Tr } from '../../ui/Table';
-import { BandBadge, formatMonth } from './score';
+import { LevelBadge, formatMonth } from './score';
 
-/** Every client of Stoïk Protect, with its latest report and its assessment in progress. */
+/** Every client of Stoïk Protect, with its latest report and its report in progress. */
 export function CompaniesPage() {
   const companies = useProtectCompanies();
   const { search, setSearch, matches } = useListFilters();
@@ -81,15 +81,15 @@ export function CompaniesPage() {
 
 function ScoreCell({
   score,
-  band,
+  level,
 }: {
   score: number;
-  band: Parameters<typeof BandBadge>[0]['band'];
+  level: Parameters<typeof LevelBadge>[0]['level'];
 }) {
   return (
     <span className="inline-flex items-center gap-2">
       {score}
-      <BandBadge band={band} />
+      <LevelBadge level={level} />
     </span>
   );
 }

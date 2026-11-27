@@ -1,4 +1,4 @@
-/** The signals of an assessment, one per squad. */
+/** The signals of a report, one per squad. */
 export const SIGNALS = ['phishingClickRatePct', 'leakedPasswords', 'unhandledAlerts'] as const;
 
 export type Signal = (typeof SIGNALS)[number];
@@ -10,7 +10,7 @@ export type Signal = (typeof SIGNALS)[number];
  */
 export type SecuritySignals = Record<Signal, number>;
 
-/** The signals of a company's first assessment, before anyone measured anything. */
+/** The signals of a company's first report, before anyone measured anything. */
 export const NO_SIGNALS: SecuritySignals = {
   phishingClickRatePct: 0,
   leakedPasswords: 0,
@@ -18,6 +18,6 @@ export const NO_SIGNALS: SecuritySignals = {
 };
 
 /** The label of a range of scores, from the worst. */
-export const BANDS = ['Critical', 'Weak', 'Good'] as const;
+export const SECURITY_LEVELS = ['Critical', 'Weak', 'Good'] as const;
 
-export type Band = (typeof BANDS)[number];
+export type SecurityLevel = (typeof SECURITY_LEVELS)[number];

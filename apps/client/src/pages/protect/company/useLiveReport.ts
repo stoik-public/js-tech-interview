@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useSignalUpdates } from '../../../lib/server-state';
-import type { Assessment, SecuritySignals, Signal } from '../../../lib/types';
+import type { Report, SecuritySignals, Signal } from '../../../lib/types';
 import { SIGNALS } from '../score';
 
 const DEBOUNCE_MS = 300;
@@ -9,7 +9,7 @@ const DEBOUNCE_MS = 300;
 /** What the inputs hold: text, so a field can be emptied while typing. */
 export type SignalInputs = Record<Signal, string>;
 
-export type AssessmentSession = {
+export type ReportSession = {
   inputs: SignalInputs;
   update: (signal: Signal, value: string) => void;
   /** Why each field cannot be saved, or null. */
@@ -18,11 +18,11 @@ export type AssessmentSession = {
   isUpdating: boolean;
   /** Why the last change could not be saved. The signals shown are kept. */
   error: Error | null;
-  /** Why the assessment cannot be published now, or null. */
+  /** Why the report cannot be published now, or null. */
   blockedReason: string | null;
 };
 
-type Change = { assessmentId: string; signals: SecuritySignals; changeId: number };
+type Change = { reportId: string; signals: SecuritySignals; changeId: number };
 
 export function signalError(signal: Signal, input: string): string | null {
   if (input.trim() === '') return 'Enter a value';
@@ -44,31 +44,31 @@ const errorsOf = (inputs: SignalInputs) =>
   ) as Record<Signal, string | null>;
 
 /**
- * Local signals of a draft assessment, saved and re-scored by the API after each change
+ * Local signals of a draft report, saved and re-scored by the API after each change
  * (debounced). Only the response to the latest change is applied, as for a quote (see useLiveQuote).
  */
-export function useLiveAssessment(assessment: Assessment): AssessmentSession {
-  const updates = useSignalUpdates(assessment.companyId);
-  const [inputs, setInputs] = useState(() => toInputs(assessment.signals));
+export function useLiveReport(report: Report): ReportSession {
+  const updates = useSignalUpdates(report.companyId);
+  const [inputs, setInputs] = useState(() => toInputs(report.signals));
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  const [syncedAt, setSyncedAt] = useState(assessment.updatedAt);
+  const [syncedAt, setSyncedAt] = useState(report.updatedAt);
   const latestChangeId = useRef(0);
   const debounceTimer = useRef<number | undefined>(undefined);
   const waiting = useRef<Change | null>(null);
 
   // The draft changed elsewhere (another tab, the API explorer) while nothing is being saved here.
-  if (assessment.updatedAt !== syncedAt && !isUpdating) {
-    setSyncedAt(assessment.updatedAt);
-    setInputs(toInputs(assessment.signals));
+  if (report.updatedAt !== syncedAt && !isUpdating) {
+    setSyncedAt(report.updatedAt);
+    setInputs(toInputs(report.signals));
   }
 
   const save = useCallback(
-    async ({ assessmentId, signals, changeId }: Change) => {
-      let response: Assessment | null = null;
+    async ({ reportId, signals, changeId }: Change) => {
+      let response: Report | null = null;
       let failure: Error | null = null;
       try {
-        response = await updates.save(assessmentId, signals);
+        response = await updates.save(reportId, signals);
       } catch (e) {
         failure = e instanceof Error ? e : new Error('Could not update the signals');
       }
@@ -115,7 +115,7 @@ export function useLiveAssessment(assessment: Assessment): AssessmentSession {
       unhandledAlerts: Number(next.unhandledAlerts),
     };
     setIsUpdating(true);
-    waiting.current = { assessmentId: assessment.id, signals, changeId };
+    waiting.current = { reportId: report.id, signals, changeId };
     debounceTimer.current = window.setTimeout(() => {
       const change = waiting.current;
       waiting.current = null;
