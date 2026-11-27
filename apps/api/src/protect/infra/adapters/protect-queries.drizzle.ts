@@ -3,7 +3,6 @@ import { and, asc, desc, eq, getTableColumns, isNotNull } from 'drizzle-orm';
 
 import { ResourceNotFoundError } from 'src/core/domain/errors';
 import { Database } from 'src/core/infra/db/database';
-import { AssessmentError } from 'src/protect/domain/assessment/error';
 import { CompanyError } from 'src/protect/domain/company/error';
 import {
   type CompanyDetail,
@@ -12,15 +11,16 @@ import {
   type ReportDetail,
   type ReportSummary,
 } from 'src/protect/domain/ports/protect-queries.port';
-import { assessment, company } from 'src/protect/infra/db/schema';
-import { AssessmentMapper } from 'src/protect/infra/mappers/assessment.mapper';
+import { ReportError } from 'src/protect/domain/report/error';
+import { report, company } from 'src/protect/infra/db/schema';
 import { CompanyMapper } from 'src/protect/infra/mappers/company.mapper';
+import { ReportMapper } from 'src/protect/infra/mappers/report.mapper';
 
 const reportColumns = {
-  id: assessment.id,
-  score: assessment.score,
-  band: assessment.band,
-  publishedAt: assessment.publishedAt,
+  id: report.id,
+  score: report.score,
+  level: report.level,
+  publishedAt: report.publishedAt,
 };
 
 /** Read models for the HTTP API. */
@@ -31,26 +31,26 @@ export class DrizzleProtectQueries implements ProtectQueries {
   /** The latest report of each company. */
   private latestReports() {
     return this.database.db
-      .selectDistinctOn([assessment.companyId], {
-        companyId: assessment.companyId,
+      .selectDistinctOn([report.companyId], {
+        companyId: report.companyId,
         ...reportColumns,
       })
-      .from(assessment)
-      .where(eq(assessment.status, 'published'))
-      .orderBy(assessment.companyId, desc(assessment.publishedAt))
+      .from(report)
+      .where(eq(report.status, 'published'))
+      .orderBy(report.companyId, desc(report.publishedAt))
       .as('latest_report');
   }
 
   private drafts() {
     return this.database.db
       .select({
-        companyId: assessment.companyId,
-        id: assessment.id,
-        score: assessment.score,
-        band: assessment.band,
+        companyId: report.companyId,
+        id: report.id,
+        score: report.score,
+        level: report.level,
       })
-      .from(assessment)
-      .where(eq(assessment.status, 'draft'))
+      .from(report)
+      .where(eq(report.status, 'draft'))
       .as('draft');
   }
 
@@ -63,10 +63,10 @@ export class DrizzleProtectQueries implements ProtectQueries {
         report: {
           id: latest.id,
           score: latest.score,
-          band: latest.band,
+          level: latest.level,
           publishedAt: latest.publishedAt,
         },
-        draft: { id: draft.id, score: draft.score, band: draft.band },
+        draft: { id: draft.id, score: draft.score, level: draft.level },
       })
       .from(company)
       .leftJoin(latest, eq(latest.companyId, company.id))
@@ -86,38 +86,32 @@ export class DrizzleProtectQueries implements ProtectQueries {
 
     const [draft] = await db
       .select()
-      .from(assessment)
-      .where(and(eq(assessment.companyId, companyId), eq(assessment.status, 'draft')));
+      .from(report)
+      .where(and(eq(report.companyId, companyId), eq(report.status, 'draft')));
     const reports = await db
       .select(reportColumns)
-      .from(assessment)
-      .where(and(eq(assessment.companyId, companyId), eq(assessment.status, 'published')))
-      .orderBy(desc(assessment.publishedAt));
+      .from(report)
+      .where(and(eq(report.companyId, companyId), eq(report.status, 'published')))
+      .orderBy(desc(report.publishedAt));
     return {
       company: CompanyMapper.fromRowToDto(row),
-      draft: draft
-        ? AssessmentMapper.fromDomainToDto(AssessmentMapper.fromRowToDomain(draft))
-        : null,
+      draft: draft ? ReportMapper.fromDomainToDto(ReportMapper.fromRowToDomain(draft)) : null,
       reports: reports.map(toReportSummary),
     };
   }
 
-  async getReport(assessmentId: string): Promise<ReportDetail> {
+  async getReport(reportId: string): Promise<ReportDetail> {
     const [row] = await this.database.db
-      .select({ assessment, company })
-      .from(assessment)
-      .innerJoin(company, eq(company.id, assessment.companyId))
+      .select({ report, company })
+      .from(report)
+      .innerJoin(company, eq(company.id, report.companyId))
       .where(
-        and(
-          eq(assessment.id, assessmentId),
-          eq(assessment.status, 'published'),
-          isNotNull(assessment.publishedAt),
-        ),
+        and(eq(report.id, reportId), eq(report.status, 'published'), isNotNull(report.publishedAt)),
       );
-    if (!row) throw new ResourceNotFoundError(AssessmentError.NotFound, 'Report not found');
+    if (!row) throw new ResourceNotFoundError(ReportError.NotFound, 'Report not found');
 
     return {
-      ...AssessmentMapper.fromDomainToDto(AssessmentMapper.fromRowToDomain(row.assessment)),
+      ...ReportMapper.fromDomainToDto(ReportMapper.fromRowToDomain(row.report)),
       company: CompanyMapper.fromRowToDto(row.company),
     };
   }

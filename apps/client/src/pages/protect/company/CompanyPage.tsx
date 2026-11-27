@@ -3,8 +3,8 @@ import { useParams } from 'react-router';
 
 import { Page } from '../../../layout/Page';
 import { PageHeader } from '../../../layout/PageHeader';
-import { useProtectCompany, useScoreScale, useStartAssessment } from '../../../lib/server-state';
-import type { Assessment, ReportSummary, ScoreScale } from '../../../lib/types';
+import { useProtectCompany, useScoreScale, useStartReport } from '../../../lib/server-state';
+import type { Report, ReportSummary, ScoreScale } from '../../../lib/types';
 import { ErrorAlert } from '../../../ui/Alert';
 import { Badge } from '../../../ui/Badge';
 import { Button } from '../../../ui/Button';
@@ -13,13 +13,13 @@ import { EmptyState } from '../../../ui/EmptyState';
 import { Skeleton } from '../../../ui/Skeleton';
 import { RowLink, Table, Td, Th, Tr } from '../../../ui/Table';
 import { useToast } from '../../../ui/Toast';
-import { BandBadge, formatMonth } from '../score';
-import { BandLegend, ScoreHistory } from '../ScoreHistory';
+import { LevelBadge, formatMonth } from '../score';
+import { LevelLegend, ScoreHistory } from '../ScoreHistory';
 import { ScoreReceipt } from './ScoreReceipt';
 import { SignalsForm } from './SignalsForm';
-import { useLiveAssessment } from './useLiveAssessment';
+import { useLiveReport } from './useLiveReport';
 
-/** A company: its assessment in progress, then its reports. */
+/** A company: its draft report, then its published reports. */
 export function CompanyPage() {
   const { companyId = '' } = useParams();
   const detail = useProtectCompany(companyId);
@@ -37,7 +37,7 @@ export function CompanyPage() {
         ]}
         status={draft && <Badge tone="blue">Draft</Badge>}
       >
-        {detail.data && !draft && <StartAssessment companyId={companyId} />}
+        {detail.data && !draft && <StartReport companyId={companyId} />}
       </PageHeader>
       <Page width="wide">
         <ErrorAlert error={detail.error ?? scale.error} />
@@ -45,7 +45,7 @@ export function CompanyPage() {
         {company && <h1 className="mb-6 text-[22px] leading-[1.4] font-medium">{company.name}</h1>}
         {draft && (
           // Remount when the draft changes so the form starts from its saved signals.
-          <AssessmentWorkspace key={draft.id} assessment={draft} />
+          <DraftReportWorkspace key={draft.id} report={draft} />
         )}
         {detail.data && <Reports reports={detail.data.reports} scale={scale.data} />}
       </Page>
@@ -53,29 +53,29 @@ export function CompanyPage() {
   );
 }
 
-function AssessmentWorkspace({ assessment }: { assessment: Assessment }) {
-  const session = useLiveAssessment(assessment);
+function DraftReportWorkspace({ report }: { report: Report }) {
+  const session = useLiveReport(report);
   return (
     <div className="mb-8 grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
       <SignalsForm session={session} />
       <div className="lg:sticky lg:top-[66px]">
-        <ScoreReceipt assessment={assessment} session={session} />
+        <ScoreReceipt report={report} session={session} />
       </div>
     </div>
   );
 }
 
-function StartAssessment({ companyId }: { companyId: string }) {
-  const start = useStartAssessment();
+function StartReport({ companyId }: { companyId: string }) {
+  const start = useStartReport();
   const toast = useToast();
   return (
     <Button
       size="xs"
       loading={start.isPending}
-      onClick={() => start.mutate(companyId, { onSuccess: () => toast('Assessment started') })}
+      onClick={() => start.mutate(companyId, { onSuccess: () => toast('Draft report started') })}
     >
       <IconPlus aria-hidden size={16} stroke={1.5} />
-      Start assessment
+      Start report
     </Button>
   );
 }
@@ -86,7 +86,7 @@ function Reports({ reports, scale }: { reports: ReportSummary[]; scale?: ScoreSc
   }
   return (
     <div className="space-y-4">
-      <Card title="Last 12 reports" actions={scale && <BandLegend scale={scale} />}>
+      <Card title="Last 12 reports" actions={scale && <LevelLegend scale={scale} />}>
         <ScoreHistory reports={reports} scale={scale} />
       </Card>
       <Table>
@@ -94,7 +94,7 @@ function Reports({ reports, scale }: { reports: ReportSummary[]; scale?: ScoreSc
           <tr>
             <Th>Report</Th>
             <Th align="right">Score</Th>
-            <Th>Band</Th>
+            <Th>Security level</Th>
           </tr>
         </thead>
         <tbody>
@@ -107,7 +107,7 @@ function Reports({ reports, scale }: { reports: ReportSummary[]; scale?: ScoreSc
               </Td>
               <Td align="right">{report.score}</Td>
               <Td>
-                <BandBadge band={report.band} />
+                <LevelBadge level={report.level} />
               </Td>
             </Tr>
           ))}

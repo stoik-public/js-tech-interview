@@ -5,7 +5,7 @@ export type CompanyProps = {
   createdAt: Date;
 };
 
-/** A client of Stoïk Protect, whose security is assessed every month. */
+/** A client of Stoïk Protect, whose security is scored every month. */
 export class Company extends Entity<CompanyProps> {
   static create(props: Omit<CompanyProps, 'createdAt'>, now: Date): Company {
     return new Company({ ...props, createdAt: now });

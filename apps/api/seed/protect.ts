@@ -1,11 +1,11 @@
-// Demo data of the protect test: companies with 12 monthly reports and an assessment in progress.
+// Demo data of the protect test: companies with 12 monthly reports and a draft report.
 import { count } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 
 import { addMonthsUtc } from 'src/core/domain/dates';
-import type { SecuritySignals } from 'src/protect/domain/assessment/security-signals';
-import { assessment, company } from 'src/protect/infra/db/schema';
-import { scoreAssessment } from 'src/scoring/public-api';
+import type { SecuritySignals } from 'src/protect/domain/report/security-signals';
+import { report, company } from 'src/protect/infra/db/schema';
+import { scoreSignals } from 'src/scoring/public-api';
 
 type Db = NodePgDatabase;
 
@@ -26,7 +26,7 @@ type CompanySpec = {
   first: Signals;
   /** The signals of the latest report. */
   latest: Signals;
-  /** The signals of the assessment in progress. */
+  /** The signals of the report in progress. */
   draft: Signals;
 };
 
@@ -60,9 +60,9 @@ const signalsOfReport = (spec: CompanySpec, index: number): SecuritySignals =>
     ) as Signals,
   );
 
-function assessmentRow(companyId: string, signals: SecuritySignals, createdAt: Date) {
-  const { score, band, breakdown } = scoreAssessment(signals);
-  return { companyId, ...signals, score, band, scoreBreakdown: breakdown, createdAt };
+function reportRow(companyId: string, signals: SecuritySignals, createdAt: Date) {
+  const { score, level, breakdown } = scoreSignals(signals);
+  return { companyId, ...signals, score, level, scoreBreakdown: breakdown, createdAt };
 }
 
 async function seedCompany(db: Db, spec: CompanySpec) {
@@ -75,17 +75,17 @@ async function seedCompany(db: Db, spec: CompanySpec) {
   // One report on the 1st of each month, the latest this month.
   const reports = Array.from({ length: REPORTS }, (_, index) => {
     const publishedAt = addMonthsUtc(firstReportAt, index);
-    const row = assessmentRow(
+    const row = reportRow(
       created.id,
       signalsOfReport(spec, index),
       new Date(publishedAt.getTime() - 3 * DAY_MS),
     );
     return { ...row, status: 'published' as const, publishedAt, updatedAt: publishedAt };
   });
-  await db.insert(assessment).values(reports);
+  await db.insert(report).values(reports);
 
-  const draft = assessmentRow(created.id, toSignals(spec.draft), now);
-  await db.insert(assessment).values({ ...draft, status: 'draft', updatedAt: now });
+  const draft = reportRow(created.id, toSignals(spec.draft), now);
+  await db.insert(report).values({ ...draft, status: 'draft', updatedAt: now });
 }
 
 export async function isSeeded(db: Db): Promise<boolean> {

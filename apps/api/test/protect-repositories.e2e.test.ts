@@ -1,8 +1,8 @@
 import type { INestApplication } from '@nestjs/common';
 
-import { AssessmentRepository } from 'src/protect/domain/ports/assessment-repository.port';
 import { CompanyRepository } from 'src/protect/domain/ports/company-repository.port';
-import { describeAssessmentRepository } from 'src/protect/tests/contracts/assessment-repository.contract';
+import { ReportRepository } from 'src/protect/domain/ports/report-repository.port';
+import { describeReportRepository } from 'src/protect/tests/contracts/report-repository.contract';
 
 import { createTestApp } from './helpers';
 
@@ -14,7 +14,7 @@ beforeAll(async () => {
 });
 afterAll(() => app.close());
 
-describeAssessmentRepository('Drizzle', async () => ({
-  repository: app.get(AssessmentRepository),
+describeReportRepository('Drizzle', async () => ({
+  repository: app.get(ReportRepository),
   givenCompany: (company) => app.get(CompanyRepository).save(company),
 }));

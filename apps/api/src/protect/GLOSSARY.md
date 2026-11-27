@@ -1,13 +1,13 @@
 # Stoïk Protect Lite
 
-The security team uses Stoïk Protect Lite to assess the security of client companies every month, and to send each one a report with its security score.
+The security team uses Stoïk Protect Lite to score the security of client companies every month, and to send each one a report with its security score.
 
 ## Language
 
 ### People
 
 **Company**:
-A client of Stoïk Protect, whose security is assessed every month. Not the company of the insurance test: each test has its own.
+A client of Stoïk Protect, whose security is scored every month. Not the company of the insurance test: each test has its own.
 _Avoid_: Customer, account, tenant
 
 **Squad**:
@@ -36,7 +36,7 @@ A number out of 100: 100 minus one penalty per signal. A higher score is better.
 _Avoid_: Rating, grade, risk score
 
 **Scoring rules**:
-The penalty tiers of each signal and the bands. The security team owns them. They change data, never the formula.
+The penalty tiers of each signal and the security levels. The security team owns them. They change data, never the formula.
 _Avoid_: Scoring model, grid
 
 **Penalty tier**:
@@ -46,26 +46,26 @@ _Avoid_: Scoring model, grid
 The points a signal takes off 100.
 _Avoid_: Malus, deduction
 
-**Band**:
-The label of a range of scores: Critical, Weak or Good. The bands in force are listed in the band legend.
-_Avoid_: Grade, level, tier
+**Security level**:
+The label of a range of scores: Critical, Weak or Good. The security levels in force are listed in the security level legend.
+_Avoid_: Band, grade, rating, risk level
 
 **Score breakdown**:
 One line per signal, with its value, its tier and its penalty. The lines add up to the score.
 
-### Assessments
-
-**Assessment**:
-A company's security score for one month: its signals, its score, its band and its breakdown. An assessment is either draft or published. A company has one draft at most.
-_Avoid_: Audit, evaluation, scan
-
-**Draft assessment**:
-An assessment the security team can still change. It is re-scored whenever a signal changes.
-
-**Publish**:
-The action that freezes a draft assessment as the month's report. A published assessment is never re-scored.
-_Avoid_: Send, finalize, lock
+### Reports
 
 **Report**:
-A published assessment: what the client received that month. It never changes.
-_Avoid_: Snapshot, statement
+A company's security score for one month: its signals, its score, its security level and its breakdown. A report is either draft or published. A company has one draft report at most.
+_Avoid_: Assessment, audit, evaluation, scan, snapshot
+
+**Draft report**:
+A report the security team can still change. It is re-scored whenever a signal changes.
+
+**Publish**:
+The action that freezes a draft report. A published report is never re-scored.
+_Avoid_: Send, finalize, lock
+
+**Published report**:
+What the client received that month. It never changes.
+_Avoid_: Statement

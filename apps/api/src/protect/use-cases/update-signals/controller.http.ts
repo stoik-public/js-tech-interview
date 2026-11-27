@@ -1,22 +1,22 @@
 import { Body, Controller, Param, Put } from '@nestjs/common';
 
-import { AssessmentMapper } from 'src/protect/infra/mappers/assessment.mapper';
+import { ReportMapper } from 'src/protect/infra/mappers/report.mapper';
 import { HttpUpdateSignalsBodyDto } from 'src/protect/use-cases/update-signals/dto.http';
 import {
   type UpdateSignalsCommand,
   UpdateSignalsUseCase,
 } from 'src/protect/use-cases/update-signals/use-case';
 
-@Controller('protect/assessments')
+@Controller('protect/reports')
 export class HttpUpdateSignalsController {
   constructor(private readonly useCase: UpdateSignalsUseCase) {}
 
-  @Put(':assessmentId')
+  @Put(':reportId')
   async update(
-    @Param('assessmentId') assessmentId: string,
+    @Param('reportId') reportId: string,
     @Body({ schema: HttpUpdateSignalsBodyDto }) body: HttpUpdateSignalsBodyDto,
   ) {
-    const command = { assessmentId, ...body } satisfies UpdateSignalsCommand;
-    return AssessmentMapper.fromDomainToDto(await this.useCase.execute(command));
+    const command = { reportId, ...body } satisfies UpdateSignalsCommand;
+    return ReportMapper.fromDomainToDto(await this.useCase.execute(command));
   }
 }

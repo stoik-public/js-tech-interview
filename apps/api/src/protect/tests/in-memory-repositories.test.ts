@@ -1,8 +1,8 @@
-import { InMemoryAssessmentRepository } from 'src/protect/infra/adapters/assessment-repository.in-memory';
+import { InMemoryReportRepository } from 'src/protect/infra/adapters/report-repository.in-memory';
 
-import { describeAssessmentRepository } from './contracts/assessment-repository.contract';
+import { describeReportRepository } from './contracts/report-repository.contract';
 
-describeAssessmentRepository('in-memory', async () => ({
-  repository: new InMemoryAssessmentRepository(),
+describeReportRepository('in-memory', async () => ({
+  repository: new InMemoryReportRepository(),
   givenCompany: async () => {},
 }));

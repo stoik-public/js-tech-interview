@@ -1,20 +1,20 @@
-import type { Assessment, ProtectCompanyDetail, ReportSummary, ScoreScale } from '../lib/types';
+import type { Report, ProtectCompanyDetail, ReportSummary, ScoreScale } from '../lib/types';
 
 export const scale = (): ScoreScale => ({
-  bands: [
-    { band: 'Weak', minScore: 0, maxScore: 69 },
-    { band: 'Good', minScore: 70, maxScore: 100 },
+  levels: [
+    { level: 'Weak', minScore: 0, maxScore: 69 },
+    { level: 'Good', minScore: 70, maxScore: 100 },
   ],
 });
 
 /** The draft of Acme Logistics, scored by the API: 55, Weak. */
-export const draftAssessment = (overrides: Partial<Assessment> = {}): Assessment => ({
-  id: 'assessment-1',
+export const draftReport = (overrides: Partial<Report> = {}): Report => ({
+  id: 'report-1',
   companyId: 'company-1',
   status: 'draft',
   signals: { phishingClickRatePct: 18, leakedPasswords: 3, unhandledAlerts: 2 },
   score: 55,
-  band: 'Weak',
+  level: 'Weak',
   scoreBreakdown: {
     lines: [
       { signal: 'phishingClickRatePct', value: 18, tierUpTo: 30, penalty: 20 },
@@ -32,7 +32,7 @@ export const draftAssessment = (overrides: Partial<Assessment> = {}): Assessment
 export const report = (overrides: Partial<ReportSummary> = {}): ReportSummary => ({
   id: 'report-1',
   score: 45,
-  band: 'Weak',
+  level: 'Weak',
   publishedAt: '2026-11-01T00:00:00.000Z',
   ...overrides,
 });
@@ -41,7 +41,7 @@ export const companyDetail = (
   overrides: Partial<ProtectCompanyDetail> = {},
 ): ProtectCompanyDetail => ({
   company: { id: 'company-1', name: 'Acme Logistics', createdAt: '2025-10-01T00:00:00.000Z' },
-  draft: draftAssessment(),
+  draft: draftReport(),
   reports: [report()],
   ...overrides,
 });

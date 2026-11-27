@@ -10,19 +10,19 @@ export type Signal = (typeof SIGNALS)[number];
  */
 export type SecuritySignals = Record<Signal, number>;
 
-export const BANDS = ['Critical', 'Weak', 'Good'] as const;
+export const SECURITY_LEVELS = ['Critical', 'Weak', 'Good'] as const;
 
-export type Band = (typeof BANDS)[number];
+export type SecurityLevel = (typeof SECURITY_LEVELS)[number];
 
 /** "Up to `upTo`, take `penalty` points off". `upTo: null` is the last tier: any value above. */
 export type PenaltyTier = { upTo: number | null; penalty: number };
 
-/** The penalty tiers and bands a security score is computed from. */
+/** The penalty tiers and levels a security score is computed from. */
 export type ScoringRules = {
   /** Sorted by ascending `upTo`, per signal. A value above the last tier cannot be scored. */
   penalties: Record<Signal, PenaltyTier[]>;
-  /** Sorted by ascending `below`. The last band has no `below`: it goes up to 100. */
-  bands: { band: Band; below?: number }[];
+  /** Sorted by ascending `below`. The last level has no `below`: it goes up to 100. */
+  levels: { level: SecurityLevel; below?: number }[];
 };
 
 // Fictional scoring rules, owned by the security team.
@@ -47,5 +47,5 @@ export const SCORING_RULES: ScoringRules = {
       { upTo: null, penalty: 25 },
     ],
   },
-  bands: [{ band: 'Weak', below: 70 }, { band: 'Good' }],
+  levels: [{ level: 'Weak', below: 70 }, { level: 'Good' }],
 };

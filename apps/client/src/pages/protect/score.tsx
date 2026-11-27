@@ -1,10 +1,10 @@
-import type { Band, ScoreBreakdown, Signal } from '../../lib/types';
+import type { SecurityLevel, ScoreBreakdown, Signal } from '../../lib/types';
 import { Badge, type Tone } from '../../ui/Badge';
 
-const BAND_TONES: Record<Band, Tone> = { Critical: 'red', Weak: 'orange', Good: 'green' };
+const LEVEL_TONES: Record<SecurityLevel, Tone> = { Critical: 'red', Weak: 'orange', Good: 'green' };
 
-/** Bar fills of the score chart: different lightness too, so the bands differ without color. */
-export const BAND_FILLS: Record<Band, string> = {
+/** Bar fills of the score chart: different lightness too, so the levels differ without color. */
+export const LEVEL_FILLS: Record<SecurityLevel, string> = {
   Critical: 'bg-red-7',
   Weak: 'bg-orange-5',
   Good: 'bg-green-6',
@@ -28,8 +28,8 @@ export const SIGNALS: Signal[] = ['phishingClickRatePct', 'leakedPasswords', 'un
 export const formatSignal = (signal: Signal, value: number) =>
   signal === 'phishingClickRatePct' ? `${value}%` : String(value);
 
-export function BandBadge({ band }: { band: Band }) {
-  return <Badge tone={BAND_TONES[band]}>{band}</Badge>;
+export function LevelBadge({ level }: { level: SecurityLevel }) {
+  return <Badge tone={LEVEL_TONES[level]}>{level}</Badge>;
 }
 
 /** "Nov 2026": a report is the one of its month. */

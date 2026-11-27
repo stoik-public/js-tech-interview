@@ -10,7 +10,7 @@ src/
 ├── pricing/         pricing rules and the premium formula
 ├── distribution/    companies, quotes and contracts
 ├── scoring/         scoring rules and the security score formula
-└── protect/         companies, assessments and reports
+└── protect/         companies and their security reports
 seed/                demo data of every test
 scripts/db.ts        database commands: generate, migrate, seed, reset
 ```
@@ -22,7 +22,7 @@ Each context:
 ```
 <context>/
 ├── <context>.module.ts      binds ports to adapters, declares controllers and use cases
-├── public-api.ts            what other contexts may use (`priceQuote`, `scoreAssessment`)
+├── public-api.ts            what other contexts may use (`priceQuote`, `scoreSignals`)
 ├── domain/                  entities, rules, error codes, ports/*.port.ts. No Nest, no database.
 ├── use-cases/<verb-noun>/   use-case.ts, controller.http.ts, dto.http.ts, use-case.test.ts
 ├── infra/                   adapters/<port>.<drizzle|in-memory|in-process|stub>.ts, mappers/,

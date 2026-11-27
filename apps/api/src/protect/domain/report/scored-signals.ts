@@ -1,17 +1,17 @@
-import type { SecuritySignals } from 'src/protect/domain/assessment/security-signals';
 import type {
-  AssessmentScore,
+  SecurityScore,
   ScoreCalculator,
 } from 'src/protect/domain/ports/score-calculator.port';
+import type { SecuritySignals } from 'src/protect/domain/report/security-signals';
 
 /**
- * Signals with their score. Only `score` builds one, so an assessment never stores signals that
+ * Signals with their score. Only `score` builds one, so a report never stores signals that
  * were not scored, nor a score of other signals.
  */
 export class ScoredSignals {
   private constructor(
     readonly signals: SecuritySignals,
-    readonly result: AssessmentScore,
+    readonly result: SecurityScore,
   ) {}
 
   /** Throws a BusinessRuleError when the signals cannot be scored (see ScoreCalculator). */

@@ -10,49 +10,49 @@ describe('UpdateSignalsUseCase', () => {
   });
 
   it('saves the signals and re-scores the draft', async () => {
-    const { assessmentId } = await fixture.givenADraftAssessment();
+    const { reportId } = await fixture.givenADraftReport();
     fixture.clock.current = new Date('2026-03-16T09:00:00Z');
 
-    await fixture.updateSignals.execute({ assessmentId, ...signals });
+    await fixture.updateSignals.execute({ reportId, ...signals });
 
-    expect(fixture.assessment(assessmentId)).toMatchObject({
+    expect(fixture.report(reportId)).toMatchObject({
       status: 'draft',
       signals,
       // Stub: 100 - 10 / 2 - 5 x 1
-      result: { score: 90, band: 'Good' },
+      result: { score: 90, level: 'Good' },
       updatedAt: new Date('2026-03-16T09:00:00Z'),
     });
   });
 
   it('changes nothing when the signals cannot be scored', async () => {
-    const { assessmentId } = await fixture.givenADraftAssessment();
-    const before = fixture.assessment(assessmentId);
+    const { reportId } = await fixture.givenADraftReport();
+    const before = fixture.report(reportId);
 
     await expect(
-      fixture.updateSignals.execute({ assessmentId, ...signals, phishingClickRatePct: 101 }),
+      fixture.updateSignals.execute({ reportId, ...signals, phishingClickRatePct: 101 }),
     ).rejects.toThrow(BusinessRuleError);
 
-    expect(fixture.assessment(assessmentId)).toEqual(before);
+    expect(fixture.report(reportId)).toEqual(before);
   });
 
-  it('fails on an unknown assessment', async () => {
+  it('fails on an unknown report', async () => {
     await expect(
-      fixture.updateSignals.execute({ assessmentId: 'unknown', ...signals }),
-    ).rejects.toMatchObject({ code: 'protect.assessment.notFound' });
+      fixture.updateSignals.execute({ reportId: 'unknown', ...signals }),
+    ).rejects.toMatchObject({ code: 'protect.report.notFound' });
   });
 
-  it('refuses to re-score a published assessment, whatever the signals', async () => {
-    const { assessmentId } = await fixture.givenADraftAssessment();
-    await fixture.publishAssessment.execute({ assessmentId });
-    const report = fixture.assessment(assessmentId);
+  it('refuses to re-score a published report, whatever the signals', async () => {
+    const { reportId } = await fixture.givenADraftReport();
+    await fixture.publishReport.execute({ reportId });
+    const report = fixture.report(reportId);
 
-    await expect(fixture.updateSignals.execute({ assessmentId, ...signals })).rejects.toThrow(
+    await expect(fixture.updateSignals.execute({ reportId, ...signals })).rejects.toThrow(
       ConflictError,
     );
     // Refused before anything is scored: signals that cannot be scored are not the answer.
     await expect(
-      fixture.updateSignals.execute({ assessmentId, ...signals, phishingClickRatePct: 101 }),
-    ).rejects.toMatchObject({ code: 'protect.assessment.published' });
-    expect(fixture.assessment(assessmentId)).toEqual(report);
+      fixture.updateSignals.execute({ reportId, ...signals, phishingClickRatePct: 101 }),
+    ).rejects.toMatchObject({ code: 'protect.report.published' });
+    expect(fixture.report(reportId)).toEqual(report);
   });
 });

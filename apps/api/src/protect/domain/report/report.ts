@@ -1,20 +1,20 @@
 import { Entity } from 'src/core/domain/entity';
 import { ConflictError } from 'src/core/domain/errors';
-import { AssessmentError } from 'src/protect/domain/assessment/error';
-import type { ScoredSignals } from 'src/protect/domain/assessment/scored-signals';
-import type { SecuritySignals } from 'src/protect/domain/assessment/security-signals';
-import type { AssessmentScore } from 'src/protect/domain/ports/score-calculator.port';
+import type { SecurityScore } from 'src/protect/domain/ports/score-calculator.port';
+import { ReportError } from 'src/protect/domain/report/error';
+import type { ScoredSignals } from 'src/protect/domain/report/scored-signals';
+import type { SecuritySignals } from 'src/protect/domain/report/security-signals';
 
-export type AssessmentStatus = 'draft' | 'published';
+export type ReportStatus = 'draft' | 'published';
 
-export type AssessmentProps = {
+export type ReportProps = {
   companyId: string;
-  status: AssessmentStatus;
+  status: ReportStatus;
   signals: SecuritySignals;
-  result: AssessmentScore;
+  result: SecurityScore;
   createdAt: Date;
   updatedAt: Date;
-  /** When the assessment became a report. Null for a draft. */
+  /** When the report became a report. Null for a draft. */
   publishedAt: Date | null;
 };
 
@@ -22,9 +22,9 @@ export type AssessmentProps = {
  * A company's security score for one month. A draft is re-scored whenever a signal changes.
  * Publishing it freezes it as the monthly report sent to the client.
  */
-export class Assessment extends Entity<AssessmentProps> {
+export class Report extends Entity<ReportProps> {
   static start({ companyId, scored }: { companyId: string; scored: ScoredSignals }, now: Date) {
-    return new Assessment({
+    return new Report({
       companyId,
       status: 'draft',
       signals: scored.signals,
@@ -35,8 +35,8 @@ export class Assessment extends Entity<AssessmentProps> {
     });
   }
 
-  static hydrate(props: AssessmentProps, id: string): Assessment {
-    return new Assessment(props, id);
+  static hydrate(props: ReportProps, id: string): Report {
+    return new Report(props, id);
   }
 
   get companyId(): string {
@@ -50,7 +50,7 @@ export class Assessment extends Entity<AssessmentProps> {
   /** Lets a use case refuse a report before it spends time scoring. `rescore` checks again. */
   assertDraft(): void {
     if (this.props.status !== 'draft') {
-      throw new ConflictError(AssessmentError.Published, 'A published assessment is read-only');
+      throw new ConflictError(ReportError.Published, 'A published report is read-only');
     }
   }
 

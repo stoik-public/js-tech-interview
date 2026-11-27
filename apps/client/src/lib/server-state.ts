@@ -3,7 +3,7 @@ import { useMemo } from 'react';
 
 import { api } from './api';
 import type {
-  Assessment,
+  Report,
   ContractDetail,
   ProspectDetail,
   ProtectCompanyDetail,
@@ -28,7 +28,7 @@ export const queryKeys = {
   scoreScale: ['score-scale'] as const,
   protectCompanies: ['protect-companies'] as const,
   protectCompany: (companyId: string) => ['protect-company', companyId] as const,
-  report: (assessmentId: string) => ['report', assessmentId] as const,
+  report: (reportId: string) => ['report', reportId] as const,
 };
 
 export const useProspects = () =>
@@ -146,32 +146,32 @@ export const useProtectCompany = (companyId: string) =>
     queryFn: () => api.protectCompany(companyId),
   });
 
-export const useReport = (assessmentId: string) =>
-  useQuery({ queryKey: queryKeys.report(assessmentId), queryFn: () => api.report(assessmentId) });
+export const useReport = (reportId: string) =>
+  useQuery({ queryKey: queryKeys.report(reportId), queryFn: () => api.report(reportId) });
 
-/** The band legend. It only changes with a release of the API, so it is fetched once. */
+/** The security level legend. It only changes with a release of the API, so it is fetched once. */
 export const useScoreScale = () =>
   useQuery({ queryKey: queryKeys.scoreScale, queryFn: api.scoreScale, staleTime: Infinity });
 
 /** Starts the next month's draft of a company. */
-export function useStartAssessment() {
+export function useStartReport() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (companyId: string) => api.startAssessment(companyId),
-    onSuccess: (assessment) => {
+    mutationFn: (companyId: string) => api.startReport(companyId),
+    onSuccess: (report) => {
       void queryClient.invalidateQueries({
-        queryKey: queryKeys.protectCompany(assessment.companyId),
+        queryKey: queryKeys.protectCompany(report.companyId),
       });
       void queryClient.invalidateQueries({ queryKey: queryKeys.protectCompanies });
     },
   });
 }
 
-/** Freezes a draft as a report: the company page shows it with the reports, never as a draft. */
-export function usePublishAssessment() {
+/** Publishes a draft report: the company page then lists it with the published reports. */
+export function usePublishReport() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (assessmentId: string) => api.publishAssessment(assessmentId),
+    mutationFn: (reportId: string) => api.publishReport(reportId),
     onSuccess: (report) => {
       queryClient.setQueryData<ProtectCompanyDetail>(
         queryKeys.protectCompany(report.companyId),
@@ -192,14 +192,13 @@ export function useSignalUpdates(companyId: string) {
   return useMemo(
     () => ({
       /** The API saves the signals and re-scores the draft. */
-      save: (assessmentId: string, signals: SecuritySignals) =>
-        api.updateSignals(assessmentId, signals),
+      save: (reportId: string, signals: SecuritySignals) => api.updateSignals(reportId, signals),
 
       /** Shows a re-scored draft where the company appears: its page now, the list when it opens. */
-      applySaved: (assessment: Assessment) => {
+      applySaved: (report: Report) => {
         queryClient.setQueryData<ProtectCompanyDetail>(
           queryKeys.protectCompany(companyId),
-          (detail) => detail && { ...detail, draft: assessment },
+          (detail) => detail && { ...detail, draft: report },
         );
         void queryClient.invalidateQueries({ queryKey: queryKeys.protectCompanies });
       },

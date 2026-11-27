@@ -28,7 +28,7 @@ export function App() {
             <Route index element={<Navigate to="companies" replace />} />
             <Route path="companies" element={<CompaniesPage />} />
             <Route path="companies/:companyId" element={<CompanyPage />} />
-            <Route path="reports/:assessmentId" element={<ReportPage />} />
+            <Route path="reports/:reportId" element={<ReportPage />} />
           </Route>
         </Route>
       </Routes>

@@ -2,7 +2,7 @@
 
 Brokers create prospects, configure cyber insurance quotes and validate them, which signs them and creates contracts. There is no login: anyone can edit any quote. Domain language: [apps/api/src/distribution/GLOSSARY.md](apps/api/src/distribution/GLOSSARY.md).
 
-A second hiring test, Protect, lives next to it: the security team assesses client companies every month, and publishing an assessment freezes it as the report sent to the client. Domain language: [apps/api/src/protect/GLOSSARY.md](apps/api/src/protect/GLOSSARY.md).
+A second hiring test, Protect, lives next to it: the security team scores client companies every month in a draft report, and publishing it freezes the report sent to the client. Domain language: [apps/api/src/protect/GLOSSARY.md](apps/api/src/protect/GLOSSARY.md).
 
 ## Layout
 
@@ -54,23 +54,23 @@ pnpm typecheck && pnpm lint && pnpm format:check && pnpm test && pnpm test:e2e
 
 ## Where to look
 
-| Topic                                               | File                                                         |
-| --------------------------------------------------- | ------------------------------------------------------------ |
-| Premium formula                                     | `apps/api/src/pricing/domain/premium.ts`                     |
-| Pricing rules (bands, factors, loadings)            | `apps/api/src/pricing/domain/pricing-rules.ts`               |
-| Validation rule (a draft quote, once priced)        | `apps/api/src/distribution/domain/quote/quote.ts`            |
-| Live premium in the UI                              | `apps/client/src/pages/prospect/useLiveQuote.ts`             |
-| Client server state (query keys, cache effects)     | `apps/client/src/lib/server-state.ts`                        |
-| Priced terms of a quote                             | `apps/api/src/distribution/domain/quote/quote-terms.ts`      |
-| Pricing rules in force                              | `apps/api/src/pricing/domain/pricing.ts`                     |
-| Rules every adapter of a port must keep             | `apps/api/src/<context>/tests/contracts/`                    |
-| Security score formula                              | `apps/api/src/scoring/domain/security-score.ts`              |
-| Scoring rules (tiers, penalties, bands)             | `apps/api/src/scoring/domain/scoring-rules.ts`               |
-| Scoring rules in force                              | `apps/api/src/scoring/domain/scoring.ts`                     |
-| Publication rule (a draft assessment, once scored)  | `apps/api/src/protect/domain/assessment/assessment.ts`       |
-| Live score in the UI                                | `apps/client/src/pages/protect/company/useLiveAssessment.ts` |
-| Tables of a bounded context                         | `apps/api/src/<context>/infra/db/schema.ts`                  |
-| Design tokens and components                        | `apps/client/src/index.css`, `apps/client/src/ui/`           |
-| Toolbox (notes, diagrams, data model, API explorer) | `apps/client/src/toolbox/`                                   |
-| Tests, their bounded contexts and the dev routes    | `apps/api/src/core/infra/dev/`                               |
-| Seed                                                | `apps/api/seed/`                                             |
+| Topic                                               | File                                                     |
+| --------------------------------------------------- | -------------------------------------------------------- |
+| Premium formula                                     | `apps/api/src/pricing/domain/premium.ts`                 |
+| Pricing rules (bands, factors, loadings)            | `apps/api/src/pricing/domain/pricing-rules.ts`           |
+| Validation rule (a draft quote, once priced)        | `apps/api/src/distribution/domain/quote/quote.ts`        |
+| Live premium in the UI                              | `apps/client/src/pages/prospect/useLiveQuote.ts`         |
+| Client server state (query keys, cache effects)     | `apps/client/src/lib/server-state.ts`                    |
+| Priced terms of a quote                             | `apps/api/src/distribution/domain/quote/quote-terms.ts`  |
+| Pricing rules in force                              | `apps/api/src/pricing/domain/pricing.ts`                 |
+| Rules every adapter of a port must keep             | `apps/api/src/<context>/tests/contracts/`                |
+| Security score formula                              | `apps/api/src/scoring/domain/security-score.ts`          |
+| Scoring rules (tiers, penalties, security levels)   | `apps/api/src/scoring/domain/scoring-rules.ts`           |
+| Scoring rules in force                              | `apps/api/src/scoring/domain/scoring.ts`                 |
+| Publication rule (a draft report, once scored)      | `apps/api/src/protect/domain/report/report.ts`           |
+| Live score in the UI                                | `apps/client/src/pages/protect/company/useLiveReport.ts` |
+| Tables of a bounded context                         | `apps/api/src/<context>/infra/db/schema.ts`              |
+| Design tokens and components                        | `apps/client/src/index.css`, `apps/client/src/ui/`       |
+| Toolbox (notes, diagrams, data model, API explorer) | `apps/client/src/toolbox/`                               |
+| Tests, their bounded contexts and the dev routes    | `apps/api/src/core/infra/dev/`                           |
+| Seed                                                | `apps/api/seed/`                                         |
